@@ -1,2 +1,2 @@
 print("hello world")
-print("hello")
+print("연동 성공")
