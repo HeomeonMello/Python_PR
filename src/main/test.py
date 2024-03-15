@@ -1,2 +1,2 @@
-print("hello world")
-print("hello")
+print("hello dworld")
+print("hello from jae1")
