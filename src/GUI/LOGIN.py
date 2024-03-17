@@ -1,15 +1,18 @@
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont
 from PIL import Image, ImageTk
 import subprocess
-import os
 
-# register.py 파일의 절대 경로
-script_path = os.path.abspath("register.py")
+
+
 def login_action():
     print("로그인 시도")  # 실제 로그인 로직으로 대체해야 함
 
-def register_action():
-    subprocess.run(["python", script_path], check=True)
+def open_register_window():
+    # 로그인 창 숨기기
+    root.withdraw()
+    # 회원가입 파일 실행
+    subprocess.run(["python", "registerP.py"], check=True)
+    root.deiconify()  # subprocess 실행이 완료된 후, 로그인 창 다시 보이기
 
 root = Tk()
 root.geometry('600x650')
@@ -40,7 +43,7 @@ canvas.create_window(password_text_x + 70, password_text_y - 2, window=entry_pw,
 login_button = Button(root, text="로그인", command=login_action,
                       bg="#e6f4ff", fg="black", font=buttonFont,
                       activebackground="lightblue", activeforeground="white", borderwidth=1)
-register_button = Button(root, text="회원가입", command=register_action,
+register_button = Button(root, text="회원가입", command=open_register_window,
                          bg="#d5f7d7", fg="black", font=buttonFont,
                          activebackground="lightgreen", activeforeground="white", borderwidth=1)
 canvas.create_window(170, 388, window=login_button, anchor="nw", width=260, height=28)
