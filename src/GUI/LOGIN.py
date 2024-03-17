@@ -1,31 +1,45 @@
-from tkinter import Tk, Label, Entry
+from tkinter import Tk, Canvas, Entry, Button, font as tkFont
 from PIL import Image, ImageTk
 
-# 창을 생성하고 설정합니다.
+def login_action():
+    print("로그인 시도")  # 실제 로그인 로직으로 대체해야 함
+
+def register_action():
+    print("회원가입 화면으로")  # 실제 회원가입 로직 또는 화면 전환 로직으로 대체
+
 root = Tk()
 root.geometry('600x650')
 root.title("Login")
-# 이미지를 불러옵니다.
+root.resizable(False, False)
+
+# 폰트를 더 현대적인 'Arial'로 변경하고, 크기와 굵기를 조정합니다.
+buttonFont = tkFont.Font(family="Arial", size=10, weight="bold")
+
 image_path = 'NewMyroom.png'
-image = Image.open(image_path)
+image = Image.open(image_path).resize((600, 650), Image.LANCZOS)
 photo = ImageTk.PhotoImage(image)
 
-# 배경 이미지 레이블을 생성하고 배치합니다.
-background_label = Label(root, image=photo)
-background_label.place(x=0, y=0, relwidth=1, relheight=1)
+canvas = Canvas(root, width=600, height=650)
+canvas.pack(fill="both", expand=True)
+canvas.create_image(0, 0, image=photo, anchor="nw")
 
-# ID 라벨과 입력란을 생성하고 배치합니다.
-label_id = Label(root, text="ID:", bg='lightgrey')  # 배경색 설정
-label_id.place(relx=0.05, rely=0.02, anchor='nw')  # 왼쪽 상단에 위치
+id_text_x, id_text_y = 27, 535
+password_text_x, password_text_y = 320, 535
+canvas.create_text(id_text_x, id_text_y, text="ID:", fill="black", anchor="nw")
+canvas.create_text(password_text_x, password_text_y, text="Password:", fill="black", anchor="nw")
 
 entry_id = Entry(root)
-entry_id.place(relx=0.15, rely=0.02, relwidth=0.3, anchor='nw')  # ID 입력란 배치
+entry_pw = Entry(root, show="●")
+canvas.create_window(id_text_x + 30, id_text_y - 2, window=entry_id, anchor="nw", width=180)
+canvas.create_window(password_text_x + 70, password_text_y - 2, window=entry_pw, anchor="nw", width=180)
 
-# 패스워드 라벨과 입력란을 생성하고 배치합니다.
-label_pw = Label(root, text="Password:", bg='lightgrey')  # 배경색 설정
-label_pw.place(relx=0.55, rely=0.02, anchor='nw')  # 오른쪽 상단에 위치
-
-entry_pw = Entry(root, show="*")
-entry_pw.place(relx=0.65, rely=0.02, relwidth=0.3, anchor='nw')  # 패스워드 입력란 배치
+login_button = Button(root, text="로그인", command=login_action,
+                      bg="#e6f4ff", fg="black", font=buttonFont,
+                      activebackground="lightblue", activeforeground="white", borderwidth=1)
+register_button = Button(root, text="회원가입", command=register_action,
+                         bg="#d5f7d7", fg="black", font=buttonFont,
+                         activebackground="lightgreen", activeforeground="white", borderwidth=1)
+canvas.create_window(170, 388, window=login_button, anchor="nw", width=260, height=28)
+canvas.create_window(170, 425, window=register_button, anchor="nw", width=260, height=28)
 
 root.mainloop()
