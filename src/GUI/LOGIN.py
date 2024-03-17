@@ -1,11 +1,15 @@
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont
 from PIL import Image, ImageTk
+import subprocess
+import os
 
+# register.py 파일의 절대 경로
+script_path = os.path.abspath("register.py")
 def login_action():
     print("로그인 시도")  # 실제 로그인 로직으로 대체해야 함
 
 def register_action():
-    print("회원가입 화면으로")  # 실제 회원가입 로직 또는 화면 전환 로직으로 대체
+    subprocess.run(["python", script_path], check=True)
 
 root = Tk()
 root.geometry('600x650')
@@ -24,7 +28,7 @@ canvas.pack(fill="both", expand=True)
 canvas.create_image(0, 0, image=photo, anchor="nw")
 
 id_text_x, id_text_y = 27, 535
-password_text_x, password_text_y = 320, 535
+password_text_x, password_text_y = 325, 535
 canvas.create_text(id_text_x, id_text_y, text="ID:", fill="black", anchor="nw")
 canvas.create_text(password_text_x, password_text_y, text="Password:", fill="black", anchor="nw")
 
