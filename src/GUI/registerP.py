@@ -35,7 +35,7 @@ root.resizable(False, False)
 entryFont = tkFont.Font(family="Arial", size=10,weight="bold")
 buttonFont = tkFont.Font(family="Arial", size=10, weight="bold")
 # 배경 이미지 설정
-bg_image_path = 'register.png'
+bg_image_path = '../Image/Register.png'
 bg_image = Image.open(bg_image_path).resize((600, 650), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
 

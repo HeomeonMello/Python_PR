@@ -6,11 +6,11 @@ import json
 import webbrowser
 from PIL import Image, ImageTk
 import io
-
 import link
 from bs4 import BeautifulSoup
+
 import sys
-sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 config 폴더로 내려감
+sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 main 폴더로 내려감
 from API import client_id, client_secret
 
 # 네이버 Open API URL 정보
