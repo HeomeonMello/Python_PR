@@ -15,7 +15,7 @@ def on_check(event):
                     messagebox.showinfo("제한", "관심사는 최대 3개까지만 선택할 수 있습니다.")
                     return
                 new_state = not state
-                fill_color = "black" if new_state else ""
+                fill_color = "#faa0a0" if new_state else ""
                 canvas.itemconfig(item_id, fill=fill_color)
                 interest_check_states[tag] = (item_id, new_state)
                 break
@@ -86,7 +86,7 @@ for i, interest in enumerate(interests):
     row = i // num_columns
     x_position = checkbox_start_x + col * checkbox_interval_x
     y_position = checkbox_start_y + row * checkbox_interval_y
-    check_id = canvas.create_rectangle(x_position, y_position, x_position + 20, y_position + 20, outline="black", tags=("check", interest))
+    check_id = canvas.create_rectangle(x_position, y_position, x_position + 20, y_position + 20, outline="#faa0a0", tags=("check", interest))
     canvas.create_text(x_position + 35, y_position + 10, text=interest, anchor="w", font=entryFont, tags=("check", interest))
     interest_check_states[interest] = (check_id, False)
 
