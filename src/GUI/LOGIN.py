@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 from tkinter import messagebox  # 로그인 결과에 대한 팝업 메시지를 표시하기 위해
 import subprocess
 import requests
+import sys
 def login_action():
     username = entry_id.get()  # 사용자가 입력한 ID를 가져옵니다.
     password = entry_pw.get()  # 사용자가 입력한 비밀번호를 가져옵니다.
@@ -32,7 +33,7 @@ def open_register_window():
     # 로그인 창 숨기기
     root.withdraw()
     # 회원가입 파일 실행
-    subprocess.run(["python", "registerP.py"], check=True)
+    subprocess.run(["python", "..\\GUI\\registerP.py"], check=True)
     root.deiconify()  # subprocess 실행이 완료된 후, 로그인 창 다시 보이기
 
 root = Tk()
