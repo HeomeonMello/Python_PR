@@ -21,7 +21,7 @@ def on_check(event):
                 break
 
 def submit_register():
-    # 회원 가입 처리 로직
+    """회원가입 등록 로직 클라이언트와 연동"""
     print("회원 가입 로직 실행")
     selected_interests = [interest for interest, (_, state) in interest_check_states.items() if state]
     print("Selected interests:", ", ".join(selected_interests))
