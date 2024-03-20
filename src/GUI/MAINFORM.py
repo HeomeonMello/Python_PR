@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 import sys
 sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 main 폴더로 내려감
-from API import client_id, client_secret
+from src.main.API import client_id, client_secret
 
 # 네이버 Open API URL 정보
 base_url = "https://openapi.naver.com/v1/search"
