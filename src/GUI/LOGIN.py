@@ -4,31 +4,8 @@ from tkinter import messagebox  # 로그인 결과에 대한 팝업 메시지를
 import subprocess
 import requests
 import sys
-def login_action():
-    username = entry_id.get()  # 사용자가 입력한 ID를 가져옵니다.
-    password = entry_pw.get()  # 사용자가 입력한 비밀번호를 가져옵니다.
-
-    # 서버의 로그인 엔드포인트 URL
-    login_url = "http://localhost:5000/login"
-
-    # 로그인 요청을 위한 데이터
-    data = {'username': username, 'password': password}
-
-    try:
-        # 서버로 POST 요청을 보냅니다.
-        response = requests.post(login_url, json=data)
-
-        if response.status_code == 200:
-            # 로그인 성공
-            messagebox.showinfo("로그인 성공", "성공적으로 로그인되었습니다.")
-            # 여기에 로그인 성공 후의 로직을 추가할 수 있습니다. 예: 메인 화면으로 전환
-        else:
-            # 로그인 실패 (서버에서 200 이외의 상태 코드 반환)
-            messagebox.showerror("로그인 실패", "ID 또는 비밀번호가 잘못되었습니다.")
-    except requests.exceptions.RequestException as e:
-        # 서버 연결 실패 등의 네트워크 오류 처리
-        messagebox.showerror("서버 연결 실패", "서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.")
-
+sys.path.append("../Server")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
+from src.Server.Client import login_action
 def open_register_window():
     # 로그인 창 숨기기
     root.withdraw()
