@@ -6,6 +6,7 @@ import requests
 import sys
 sys.path.append("../Server")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
 from src.Server.Client import login_action
+
 def open_register_window():
     # 로그인 창 숨기기
     root.withdraw()
