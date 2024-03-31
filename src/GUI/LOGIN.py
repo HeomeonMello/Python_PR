@@ -1,8 +1,6 @@
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont
 from PIL import Image, ImageTk
-from tkinter import messagebox  # 로그인 결과에 대한 팝업 메시지를 표시하기 위해
 import subprocess
-import requests
 import sys
 sys.path.append("../Server")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
 from src.Server.Client import login_action
