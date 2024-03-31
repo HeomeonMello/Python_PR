@@ -1,5 +1,6 @@
 import requests
-import tkinter as tk
+from tkinter import Tk, Canvas, Entry, Button, font as tkFont, messagebox
+from PIL import Image, ImageTk
 from tkinter import messagebox
 import sys
 
@@ -64,6 +65,18 @@ def login_action():
     except requests.exceptions.RequestException as e:
         # 서버 연결 실패 등의 네트워크 오류 처리
         messagebox.showerror("서버 연결 실패", "서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.")
+
+
+def submit_register():
+    """회원가입 등록 로직 클라이언트와 연동"""
+    sys.path.append("../GUI")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
+    from src.GUI.registerP import entry_username,entry_id,entry_password,interest_check_states
+    username = entry_username.get()
+    user_id = entry_id.get()
+    password = entry_password.get()
+    selected_interests = [interest for interest, (_, state) in interest_check_states.items() if state]
+    print(username,user_id,password,selected_interests)
+
 
 def create_gui():
     sys.path.append("../GUI")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감

@@ -1,6 +1,11 @@
 # registerP.py 파일 내용
-from tkinter import Tk, Canvas, Entry, Button, font as tkFont,messagebox
+import requests
+from tkinter import messagebox
+from tkinter import Tk, Canvas, Entry, Button, font as tkFont, messagebox
 from PIL import Image, ImageTk
+import sys
+sys.path.append("../Server")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
+from src.Server.Client import submit_register
 
 def on_check(event):
     clicked_items = canvas.find_withtag("current")
@@ -20,11 +25,36 @@ def on_check(event):
                 interest_check_states[tag] = (item_id, new_state)
                 break
 
-def submit_register():
-    """회원가입 등록 로직 클라이언트와 연동"""
-    print("회원 가입 로직 실행")
+
+def submit():
+    username = entry_username.get()
+    user_id = entry_id.get()
+    password = entry_password.get()
+    password_confirm = entry_password_confirm.get()
     selected_interests = [interest for interest, (_, state) in interest_check_states.items() if state]
-    print("Selected interests:", ", ".join(selected_interests))
+
+    # 입력 필드가 비어 있는지 검사
+    if not username.strip():
+        messagebox.showerror("오류", "사용자 이름을 입력해주세요.")
+        return
+    if not user_id.strip():
+        messagebox.showerror("오류", "ID를 입력해주세요.")
+        return
+    if not password.strip():
+        messagebox.showerror("오류", "비밀번호를 입력해주세요.")
+        return
+    if not password_confirm.strip():
+        messagebox.showerror("오류", "비밀번호 확인을 입력해주세요.")
+        return
+    # 비밀번호 일치 여부 검사
+    if password != password_confirm:
+        messagebox.showerror("오류", "비밀번호가 일치하지 않습니다.")
+        return
+    if len(selected_interests) == 0:
+        messagebox.showerror("오류", "최소 한 개 이상의 관심사를 선택해야 합니다.")
+    # submit_register 함수를 수정하여 매개변수로 필요한 데이터를 전달합니다.
+    submit_register
+
 
 root = Tk()
 root.geometry('600x650')
@@ -94,7 +124,7 @@ canvas.tag_bind("check", "<Button-1>", on_check)
 
 # 회원가입 버튼
 # 회원가입 버튼 추가 및 스타일 꾸미기
-register_button = Button(root, text="회원가입", command=submit_register,
+register_button = Button(root, text="회원가입", command=submit,
                          bg="#d5f7d7", fg="black", font=buttonFont,
                          activebackground="lightgreen", activeforeground="white", borderwidth=1)
 canvas.create_window(170, 600, window=register_button, anchor="nw", width=260, height=28)
