@@ -4,6 +4,9 @@ from tkinter import messagebox
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont, messagebox
 from PIL import Image, ImageTk
 import sys
+
+import src.Server.Client
+
 sys.path.append("../Server")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
 from src.Server.Client import submit_register
 
@@ -52,8 +55,13 @@ def submit():
         return
     if len(selected_interests) == 0:
         messagebox.showerror("오류", "최소 한 개 이상의 관심사를 선택해야 합니다.")
+        return
     # submit_register 함수를 수정하여 매개변수로 필요한 데이터를 전달합니다.
-    submit_register
+        # 입력 검증 로직 후
+    if password == password_confirm:
+        src.Server.Client.submit_register(username, password, user_id, selected_interests)
+    else:
+        messagebox.showerror("오류", "비밀번호가 일치하지 않습니다.")
 
 
 root = Tk()
