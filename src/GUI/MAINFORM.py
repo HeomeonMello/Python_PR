@@ -114,11 +114,28 @@ def exit_app():
     if response:
         root.destroy()
 
+def open_info_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("내 정보")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 사용자의 정보를 보여주는 창입니다.").pack()
+
+def open_fav_news_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("내 관심 뉴스 골라보기")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 사용자의 관심 뉴스를 보여주는 창입니다.").pack()
+
+def open_similar_news_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("최근 열람한 기사와 비슷한 내용의 기사")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 최근 열람한 기사와 비슷한 내용의 기사를 보여주는 창입니다.").pack()
 
 # 메인 윈도우 설정
 root = tk.Tk()
 root.title("개인화된 뉴스 피드")
-root.geometry("1340x800")
+root.geometry("1700x800")
 
 # 메뉴 바 생성
 menu_bar = tk.Menu(root)
@@ -142,6 +159,25 @@ root.config(menu=menu_bar)
 search_frame = tk.Frame(root, bg='#68a6fc')
 search_frame.pack(fill='x', pady=10)
 
+# 좌측 메뉴 프레임 설정
+menu_frame = tk.Frame(root, bg='#68a6fc')
+menu_frame.pack(fill='y', side='left', padx=10)
+
+# 메뉴 버튼 스타일 설정
+menu_button_font = tkFont.Font(family='Helvetica', size=12)
+
+# '내 정보' 버튼
+btn_my_info = tk.Button(menu_frame, text='내 정보', font=menu_button_font, command=open_info_window)
+btn_my_info.pack(fill='x', pady=5)
+
+# '내 관심 뉴스 골라보기' 버튼
+btn_fav_news = tk.Button(menu_frame, text='내 관심 뉴스 골라보기', font=menu_button_font, command=open_fav_news_window)
+btn_fav_news.pack(fill='x', pady=5)
+
+# '최근 열람한 기사와 비슷한 내용의 기사' 버튼
+btn_similar_news = tk.Button(menu_frame, text='최근 열람한 기사와 비슷한 내용의 기사', font=menu_button_font, command=open_similar_news_window)
+btn_similar_news.pack(fill='x', pady=5)
+
 # 검색창 입력 필드
 search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
 search_entry.pack(side='left', padx=(10, 0), pady=10)
@@ -163,19 +199,7 @@ search_entry.bind('<Return>', handle_search)
 # 뉴스 항목을 Canvas 위에 표시하는 함수
 
 # 뉴스 프레임과 스크롤바를 포함한 Canvas 설정
-news_canvas = Canvas(root, borderwidth=0, background="#ffffff")
-news_frame = Frame(news_canvas, background="#ffffff")
-v_scrollbar = Scrollbar(root, orient="vertical", command=news_canvas.yview)
-news_canvas.configure(yscrollcommand=v_scrollbar.set)
 
-
-v_scrollbar.pack(side="right", fill="y")
-news_canvas.pack(side="left", fill="both", expand=True)
-canvas = Canvas(news_frame)
-canvas.pack(side="left", fill="both", expand=True)
-
-news_canvas.create_window((4, 4), window=news_frame, anchor="nw", tags="frame")
-news_frame.bind("<Configure>", lambda event, canvas=news_canvas: on_frame_configure(news_canvas))
 
 
 # 배경색 설정을 위한 메인 프레임
