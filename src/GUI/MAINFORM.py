@@ -93,10 +93,47 @@ def load_initial_news():
     initial_topic = "일반"  # 또는 다른 기본 검색어
     search_news(initial_topic)
 
+def handle_search(event=None):  # `event` 매개변수 추가
+    # 사용자 입력을 받아오기
+    search_query = search_entry.get().strip()  # 앞뒤 공백 제거
+    if search_query:  # 검색어가 비어있지 않을 경우에만 검색 진행
+        search_news(search_query)
+    else:
+        messagebox.showinfo('알림', '검색어가 없습니다.')
+
+        # 사용자 정보 표시 함수
+        def show_user_info():
+            messagebox.showinfo('사용자 정보', '사용자: 홍길동\n등급: VIP\n가입일: 2023-01-01')
+
+
 # 메인 윈도우 설정
 root = tk.Tk()
 root.title("개인화된 뉴스 피드")
 root.geometry("1340x800")
+
+
+# 검색창 프레임 설정
+search_frame = tk.Frame(root, bg='#68a6fc')
+search_frame.pack(fill='x', pady=10)
+
+# 검색창 입력 필드
+search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
+search_entry.pack(side='left', padx=(10, 0), pady=10)
+
+# 검색 버튼 이미지 로드 및 설정
+search_img = Image.open('../Image/search.png')  # 이미지 파일 위치
+search_img = search_img.resize((20, 20)) # 이미지 사이즈 조절
+search_photo = ImageTk.PhotoImage(search_img)
+
+# 검색 버튼을 이미지 버튼으로 변경
+search_button = tk.Button(search_frame, image=search_photo, command=handle_search,
+                          borderwidth=2, relief=tk.RAISED)
+search_button.image = search_photo  # 이미지가 가비지 컬렉션에 의해 삭제되는 것을 방지
+search_button.pack(side='left', padx=10, pady=10)
+
+# 엔터 키를 눌렀을 때 검색이 되도록 바인딩, 함수 호출 수정
+search_entry.bind('<Return>', handle_search)
+
 # 뉴스 항목을 Canvas 위에 표시하는 함수
 
 # 뉴스 프레임과 스크롤바를 포함한 Canvas 설정
@@ -143,3 +180,4 @@ news_frame.pack(fill='both', expand=True, padx=10, pady=10)
 load_initial_news()
 
 root.mainloop()
+
