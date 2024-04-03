@@ -1,6 +1,7 @@
 import urllib.request
 from urllib.parse import quote
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import json
 import webbrowser
@@ -8,6 +9,7 @@ from PIL import Image, ImageTk
 import io
 import link
 from bs4 import BeautifulSoup
+
 
 import sys
 sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 main 폴더로 내려감
@@ -101,9 +103,16 @@ def handle_search(event=None):  # `event` 매개변수 추가
     else:
         messagebox.showinfo('알림', '검색어가 없습니다.')
 
-        # 사용자 정보 표시 함수
-        def show_user_info():
-            messagebox.showinfo('사용자 정보', '사용자: 홍길동\n등급: VIP\n가입일: 2023-01-01')
+def about():
+    messagebox.showinfo("정보", "개인화된 뉴스 피드 애플리케이션입니다.\n원하시는 키워드는 검색하실 수 있습니다.")
+
+def privacy():
+    messagebox.showinfo("내 정보", "자신이 선택한 주제입니다.\n")
+
+def exit_app():
+    response = messagebox.askyesno("종료", "애플리케이션을 종료하시겠습니까?")
+    if response:
+        root.destroy()
 
 
 # 메인 윈도우 설정
@@ -111,6 +120,23 @@ root = tk.Tk()
 root.title("개인화된 뉴스 피드")
 root.geometry("1340x800")
 
+# 메뉴 바 생성
+menu_bar = tk.Menu(root)
+
+# 도움말 메뉴
+help_menu = tk.Menu(menu_bar, tearoff=0)
+help_menu.add_command(label="정보", command=about)
+menu_bar.add_cascade(label="내정보", command=privacy)
+menu_bar.add_cascade(label="도움말", menu=help_menu)
+
+# 파일 메뉴
+file_menu = tk.Menu(menu_bar, tearoff=0)
+file_menu.add_command(label="종료", command=exit_app)
+menu_bar.add_cascade(label="현재 창 종료", menu=file_menu)
+
+
+# 메뉴 바를 윈도우에 추가
+root.config(menu=menu_bar)
 
 # 검색창 프레임 설정
 search_frame = tk.Frame(root, bg='#68a6fc')
