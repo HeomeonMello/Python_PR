@@ -1,46 +1,12 @@
-import urllib.request
-from urllib.parse import quote
 import tkinter as tk
-from tkinter import messagebox
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
-import json
 import webbrowser
 from PIL import Image, ImageTk
-import io
-import link
-from bs4 import BeautifulSoup
-
-
-import sys
-sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 main 폴더로 내려감
-from src.main.API import client_id, client_secret
-
-# 네이버 Open API URL 정보
-base_url = "https://openapi.naver.com/v1/search"
-node = "/news.json"
-
-
-def clean_html(raw_html):
-    soup = BeautifulSoup(raw_html, "html.parser")
-    text = soup.get_text()
-    return text
+from src.main.API import get_news_search_result, clean_html
 
 def on_frame_configure(canvas):
     '''Reset the scroll region to encompass the inner frame'''
     canvas.configure(scrollregion=canvas.bbox("all"))
-
-# 네이버 Open API 요청 함수
-def get_request_url(api_url):
-    req = urllib.request.Request(api_url)
-    req.add_header("X-Naver-Client-Id", client_id)
-    req.add_header("X-Naver-Client-Secret", client_secret)
-
-    try:
-        response = urllib.request.urlopen(req)
-        if response.getcode() == 200:
-            return response.read().decode('UTF-8')
-    except Exception as e:
-        return None
 
 # 주제 클릭 이벤트 처리 함수
 def on_topic_click(event, topic):
@@ -53,15 +19,6 @@ def on_topic_click(event, topic):
 
     # 선택된 주제의 뉴스 검색
     search_news(topic)
-
-# 뉴스 검색 결과 가져오기
-def get_news_search_result(src_text, start=1, display=10):
-    api_url = f"{base_url}{node}?query={quote(src_text)}&start={start}&display={display}"
-    response_decode = get_request_url(api_url)
-    if response_decode:
-        return json.loads(response_decode)
-    return None
-
 
 def display_news(news_data):
     for widget in news_frame.winfo_children():
@@ -119,18 +76,6 @@ def open_info_window():
     new_window.title("내 정보")
     new_window.geometry("1200x800")
     tk.Label(new_window, text="이곳은 사용자의 정보를 보여주는 창입니다.").pack()
-
-def open_fav_news_window():
-    new_window = tk.Toplevel(root)
-    new_window.title("내 관심 뉴스 골라보기")
-    new_window.geometry("1200x800")
-    tk.Label(new_window, text="이곳은 사용자의 관심 뉴스를 보여주는 창입니다.").pack()
-
-def open_similar_news_window():
-    new_window = tk.Toplevel(root)
-    new_window.title("최근 열람한 기사와 비슷한 내용의 기사")
-    new_window.geometry("1200x800")
-    tk.Label(new_window, text="이곳은 최근 열람한 기사와 비슷한 내용의 기사를 보여주는 창입니다.").pack()
 
 # 메인 윈도우 설정
 root = tk.Tk()
