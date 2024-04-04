@@ -184,14 +184,25 @@ search_entry.pack(side='left', padx=(10, 0), pady=10)
 
 # 검색 버튼 이미지 로드 및 설정
 search_img = Image.open('../Image/search.png')  # 이미지 파일 위치
-search_img = search_img.resize((20, 20)) # 이미지 사이즈 조절
+search_img = search_img.resize((25, 25)) # 이미지 사이즈 조절
 search_photo = ImageTk.PhotoImage(search_img)
 
-# 검색 버튼을 이미지 버튼으로 변경
-search_button = tk.Button(search_frame, image=search_photo, command=handle_search,
-                          borderwidth=2, relief=tk.RAISED)
-search_button.image = search_photo  # 이미지가 가비지 컬렉션에 의해 삭제되는 것을 방지
-search_button.pack(side='left', padx=10, pady=10)
+
+
+# 캔버스 생성 및 검색 프레임에 추가
+# 캔버스 생성 및 검색 프레임에 추가, 테두리 없음 설정
+search_canvas = Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)  # 캔버스 크기 및 배경색, 테두리 설정
+search_canvas.pack(side='left', padx=10, pady=10)
+
+# 캔버스 위에 이미지 배치
+# 이미지 사이즈 조절이 이미 되어있으므로, 캔버스 크기에 맞게 조절한 이미지 사용
+canvas_image = search_canvas.create_image(17, 17, image=search_photo)  # 캔버스 중앙에 이미지 배치
+
+# 캔버스에 마우스 클릭 이벤트 바인딩하여 검색 기능 실행
+def on_canvas_click(event):
+    handle_search()
+
+search_canvas.bind("<Button-1>", on_canvas_click)  # 마우스 왼쪽 버튼 클릭 시 이벤트 연결
 
 # 엔터 키를 눌렀을 때 검색이 되도록 바인딩, 함수 호출 수정
 search_entry.bind('<Return>', handle_search)
