@@ -1,6 +1,7 @@
 import urllib.request
 from urllib.parse import quote
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import json
 import webbrowser
@@ -8,6 +9,7 @@ from PIL import Image, ImageTk
 import io
 import link
 from bs4 import BeautifulSoup
+
 
 import sys
 sys.path.append("..\\main")  # 상위 디렉토리로 올라간 뒤 main 폴더로 내려감
@@ -93,26 +95,122 @@ def load_initial_news():
     initial_topic = "일반"  # 또는 다른 기본 검색어
     search_news(initial_topic)
 
+def handle_search(event=None):  # `event` 매개변수 추가
+    # 사용자 입력을 받아오기
+    search_query = search_entry.get().strip()  # 앞뒤 공백 제거
+    if search_query:  # 검색어가 비어있지 않을 경우에만 검색 진행
+        search_news(search_query)
+    else:
+        messagebox.showinfo('알림', '검색어가 없습니다.')
+
+def about():
+    messagebox.showinfo("정보", "개인화된 뉴스 피드 애플리케이션입니다.\n원하시는 키워드는 검색하실 수 있습니다.")
+
+def privacy():
+    messagebox.showinfo("내 정보", "자신이 선택한 주제입니다.\n")
+
+def exit_app():
+    response = messagebox.askyesno("종료", "애플리케이션을 종료하시겠습니까?")
+    if response:
+        root.destroy()
+
+def open_info_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("내 정보")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 사용자의 정보를 보여주는 창입니다.").pack()
+
+def open_fav_news_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("내 관심 뉴스 골라보기")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 사용자의 관심 뉴스를 보여주는 창입니다.").pack()
+
+def open_similar_news_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("최근 열람한 기사와 비슷한 내용의 기사")
+    new_window.geometry("1200x800")
+    tk.Label(new_window, text="이곳은 최근 열람한 기사와 비슷한 내용의 기사를 보여주는 창입니다.").pack()
+
 # 메인 윈도우 설정
 root = tk.Tk()
 root.title("개인화된 뉴스 피드")
-root.geometry("1340x800")
+root.geometry("1700x800")
+
+# 메뉴 바 생성
+menu_bar = tk.Menu(root)
+
+# 도움말 메뉴
+help_menu = tk.Menu(menu_bar, tearoff=0)
+help_menu.add_command(label="정보", command=about)
+menu_bar.add_cascade(label="내정보", command=privacy)
+menu_bar.add_cascade(label="도움말", menu=help_menu)
+
+# 파일 메뉴
+file_menu = tk.Menu(menu_bar, tearoff=0)
+file_menu.add_command(label="종료", command=exit_app)
+menu_bar.add_cascade(label="현재 창 종료", menu=file_menu)
+
+
+# 메뉴 바를 윈도우에 추가
+root.config(menu=menu_bar)
+
+# 검색창 프레임 설정
+search_frame = tk.Frame(root, bg='#68a6fc')
+search_frame.pack(fill='x', pady=10)
+
+# 좌측 메뉴 프레임 설정
+menu_frame = tk.Frame(root, bg='#68a6fc')
+menu_frame.pack(fill='y', side='left', padx=10)
+
+# 메뉴 버튼 스타일 설정
+menu_button_font = tkFont.Font(family='Helvetica', size=12)
+
+# '내 정보' 버튼
+btn_my_info = tk.Button(menu_frame, text='내 정보', font=menu_button_font, command=open_info_window)
+btn_my_info.pack(fill='x', pady=5)
+
+# '내 관심 뉴스 골라보기' 버튼
+btn_fav_news = tk.Button(menu_frame, text='내 관심 뉴스 골라보기', font=menu_button_font, command=open_fav_news_window)
+btn_fav_news.pack(fill='x', pady=5)
+
+# '최근 열람한 기사와 비슷한 내용의 기사' 버튼
+btn_similar_news = tk.Button(menu_frame, text='최근 열람한 기사와 비슷한 내용의 기사', font=menu_button_font, command=open_similar_news_window)
+btn_similar_news.pack(fill='x', pady=5)
+
+# 검색창 입력 필드
+search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
+search_entry.pack(side='left', padx=(10, 0), pady=10)
+
+# 검색 버튼 이미지 로드 및 설정
+search_img = Image.open('../Image/search.png')  # 이미지 파일 위치
+search_img = search_img.resize((25, 25)) # 이미지 사이즈 조절
+search_photo = ImageTk.PhotoImage(search_img)
+
+
+
+# 캔버스 생성 및 검색 프레임에 추가
+# 캔버스 생성 및 검색 프레임에 추가, 테두리 없음 설정
+search_canvas = Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)  # 캔버스 크기 및 배경색, 테두리 설정
+search_canvas.pack(side='left', padx=10, pady=10)
+
+# 캔버스 위에 이미지 배치
+# 이미지 사이즈 조절이 이미 되어있으므로, 캔버스 크기에 맞게 조절한 이미지 사용
+canvas_image = search_canvas.create_image(17, 17, image=search_photo)  # 캔버스 중앙에 이미지 배치
+
+# 캔버스에 마우스 클릭 이벤트 바인딩하여 검색 기능 실행
+def on_canvas_click(event):
+    handle_search()
+
+search_canvas.bind("<Button-1>", on_canvas_click)  # 마우스 왼쪽 버튼 클릭 시 이벤트 연결
+
+# 엔터 키를 눌렀을 때 검색이 되도록 바인딩, 함수 호출 수정
+search_entry.bind('<Return>', handle_search)
+
 # 뉴스 항목을 Canvas 위에 표시하는 함수
 
 # 뉴스 프레임과 스크롤바를 포함한 Canvas 설정
-news_canvas = Canvas(root, borderwidth=0, background="#ffffff")
-news_frame = Frame(news_canvas, background="#ffffff")
-v_scrollbar = Scrollbar(root, orient="vertical", command=news_canvas.yview)
-news_canvas.configure(yscrollcommand=v_scrollbar.set)
 
-
-v_scrollbar.pack(side="right", fill="y")
-news_canvas.pack(side="left", fill="both", expand=True)
-canvas = Canvas(news_frame)
-canvas.pack(side="left", fill="both", expand=True)
-
-news_canvas.create_window((4, 4), window=news_frame, anchor="nw", tags="frame")
-news_frame.bind("<Configure>", lambda event, canvas=news_canvas: on_frame_configure(news_canvas))
 
 
 # 배경색 설정을 위한 메인 프레임
@@ -143,3 +241,4 @@ news_frame.pack(fill='both', expand=True, padx=10, pady=10)
 load_initial_news()
 
 root.mainloop()
+
