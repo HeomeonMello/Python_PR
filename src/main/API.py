@@ -2,6 +2,7 @@ import urllib.request
 from urllib.parse import quote
 import json
 from bs4 import BeautifulSoup
+from html import unescape
 
 client_id = "pk58dq7tnbpRqjUTnE51"
 client_secret = "deoKEIaIyh"
@@ -11,15 +12,15 @@ node = "/news.json"
 
 def clean_html(raw_html):
     if not raw_html or '<' not in raw_html:  # HTML 태그가 없거나 비어 있는 경우
-        return raw_html  # 원본 문자열 반환
+        return unescape(raw_html)  # HTML 엔티티를 변환
 
     try:
         soup = BeautifulSoup(raw_html, "html.parser")
         text = soup.get_text()
-        return text
+        return unescape(text)  # HTML 엔티티를 변환 후 반환
     except Exception as e:
         print("HTML 클리닝 중 오류 발생:", e)
-        return raw_html  # 예외 발생 시 원본 문자열 반환
+        return unescape(raw_html)  # 예외 발생 시 HTML 엔티티 변환 후 원본 문자열 반환
 
 def get_request_url(api_url):
     req = urllib.request.Request(api_url)

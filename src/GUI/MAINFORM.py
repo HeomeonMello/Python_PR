@@ -1,189 +1,156 @@
+#MAINFORM.py
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 from PIL import Image, ImageTk
 from src.main.API import get_news_search_result, clean_html
 
-def on_frame_configure(canvas):
-    '''Reset the scroll region to encompass the inner frame'''
-    canvas.configure(scrollregion=canvas.bbox("all"))
+class NewsFeedApp:
+    def __init__(self, root):
+        self.root = root
+        self.setup_ui()
 
-# 주제 클릭 이벤트 처리 함수
-def on_topic_click(event, topic):
-    # 모든 주제 라벨의 배경색을 원래대로 되돌림
-    for label in topic_labels:
-        label.config(bg='#68a6fc')
+    def setup_ui(self):
+        self.root.title("개인화된 뉴스 피드")
+        self.root.geometry("1700x900")
+        self.root.resizable(False, False)
+        self.create_menu()
+        self.create_search_frame()
+        self.create_topic_frame()
+        self.create_news_frame()
+        self.load_initial_news()
 
-    # 선택된 주제의 배경색 변경
-    event.widget.config(bg='#1859b5')
+    def create_menu(self):
+        menu_bar = tk.Menu(self.root)
+        help_menu = tk.Menu(menu_bar, tearoff=0)
+        help_menu.add_command(label="정보", command=self.about)
+        menu_bar.add_cascade(label="내정보", command=self.privacy)
+        menu_bar.add_cascade(label="도움말", menu=help_menu)
 
-    # 선택된 주제의 뉴스 검색
-    search_news(topic)
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="종료", command=self.exit_app)
+        menu_bar.add_cascade(label="현재 창 종료", menu=file_menu)
 
-def display_news(news_data):
-    for widget in news_frame.winfo_children():
-        widget.destroy()
+        self.root.config(menu=menu_bar)
 
-    for i, item in enumerate(news_data['items']):
-        raw_title = item['title']
-        clean_title = clean_html(raw_title)  # HTML 태그 제거
-        raw_description = item['description']
-        clean_description = clean_html(raw_description)  # HTML 태그 제거
-        link = item['link']
-        pubDate = item['pubDate']
-        source = item['originallink'].split('/')[2].replace('www.', '')  # 도메인 추출
+    def create_search_frame(self):
+        search_frame = tk.Frame(self.root, bg='#68a6fc')
+        search_frame.pack(fill='x', pady=10)
 
-        ttk.Label(news_frame, text=f"{source} | {pubDate}", font=('Helvetica', 10)).pack(anchor='w')
-        title_label = ttk.Label(news_frame, text=clean_title, font=('Helvetica', 12, 'bold'), foreground="blue",
-                                cursor="hand2")
-        title_label.pack(anchor='w')
-        ttk.Label(news_frame, text=clean_description, font=('Helvetica', 10)).pack(anchor='w')
-        title_label.bind("<Button-1>", lambda e, link=link: webbrowser.open(link))
+        self.search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
+        self.search_entry.pack(side='left', padx=(10, 0), pady=10)
+        self.search_entry.bind('<Return>', self.handle_search)
 
-def search_news(topic):
-    news_data = get_news_search_result(topic)
-    if news_data:
-        display_news(news_data)
-    else:
-        messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
+        search_img = Image.open('../Image/search.png').resize((25, 25))
+        search_photo = ImageTk.PhotoImage(search_img)
 
-# 초기 뉴스 로딩 함수
-def load_initial_news():
-    initial_topic = "일반"  # 또는 다른 기본 검색어
-    search_news(initial_topic)
+        search_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
+        search_canvas.pack(side='left', padx=10, pady=10)
+        search_canvas.create_image(17, 17, image=search_photo)
+        search_canvas.bind("<Button-1>", self.handle_search)
+        search_canvas.image = search_photo
 
-def handle_search(event=None):  # `event` 매개변수 추가
-    # 사용자 입력을 받아오기
-    search_query = search_entry.get().strip()  # 앞뒤 공백 제거
-    if search_query:  # 검색어가 비어있지 않을 경우에만 검색 진행
-        search_news(search_query)
-    else:
-        messagebox.showinfo('알림', '검색어가 없습니다.')
+    def create_topic_frame(self):
+        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교",
+                       "날씨"]
+        self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
+        self.topic_frame.pack(fill='x', padx=5, pady=5)
+        self.topic_labels = []  # 주제 라벨들을 저장할 리스트
 
-def about():
-    messagebox.showinfo("정보", "개인화된 뉴스 피드 애플리케이션입니다.\n원하시는 키워드는 검색하실 수 있습니다.")
+        for topic in self.topics:
+            topic_label = tk.Label(self.topic_frame, text=topic, fg='white', bg='#68a6fc', padx=6,
+                                   font=('Helvetica', 12, 'bold'))
+            topic_label.pack(side='left', padx=4, pady=4)
+            topic_label.bind("<Button-1>", lambda e, t=topic: self.on_topic_click(e, t))
+            self.topic_labels.append(topic_label)
 
-def privacy():
-    messagebox.showinfo("내 정보", "자신이 선택한 주제입니다.\n")
+    def create_news_frame(self):
+        # 뉴스 프레임 컨테이너 생성 (프레임의 위치와 크기를 place를 이용해 지정)
+        container = ttk.Frame(self.root)
+        container.place(x=695, y=120, width=1000, height=470)  # 윈도우의 오른쪽 900x500 영역에 위치
 
-def exit_app():
-    response = messagebox.askyesno("종료", "애플리케이션을 종료하시겠습니까?")
-    if response:
-        root.destroy()
+        # 스크롤바 생성
+        canvas = tk.Canvas(container, width=880, height=480)  # canvas 크기를 조금 더 작게 설정하여 scrollbar에 공간을 제공
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        self.scrollable_frame = ttk.Frame(canvas)
 
-def open_info_window():
-    new_window = tk.Toplevel(root)
-    new_window.title("내 정보")
-    new_window.geometry("1200x800")
-    tk.Label(new_window, text="이곳은 사용자의 정보를 보여주는 창입니다.").pack()
+        # 스크롤 가능한 프레임에 스크롤바 연결
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
 
-# 메인 윈도우 설정
-root = tk.Tk()
-root.title("개인화된 뉴스 피드")
-root.geometry("1700x800")
+        # 캔버스에 스크롤 가능한 프레임을 추가하고, 스크롤바 설정
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-# 메뉴 바 생성
-menu_bar = tk.Menu(root)
+        # 컨테이너에 캔버스와 스크롤바를 배치
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
-# 도움말 메뉴
-help_menu = tk.Menu(menu_bar, tearoff=0)
-help_menu.add_command(label="정보", command=about)
-menu_bar.add_cascade(label="내정보", command=privacy)
-menu_bar.add_cascade(label="도움말", menu=help_menu)
+        self.news_frame = self.scrollable_frame
 
-# 파일 메뉴
-file_menu = tk.Menu(menu_bar, tearoff=0)
-file_menu.add_command(label="종료", command=exit_app)
-menu_bar.add_cascade(label="현재 창 종료", menu=file_menu)
+    def load_initial_news(self):
+        self.search_news("일반")
 
+    def on_topic_click(self, event, topic):
+        # 모든 주제 라벨의 배경색을 원래대로 되돌림
+        for label in self.topic_labels:
+            label.config(bg='#68a6fc')
 
-# 메뉴 바를 윈도우에 추가
-root.config(menu=menu_bar)
+        # 선택된 주제의 배경색 변경
+        event.widget.config(bg='#1859b5')
 
-# 검색창 프레임 설정
-search_frame = tk.Frame(root, bg='#68a6fc')
-search_frame.pack(fill='x', pady=10)
+        # 선택된 주제의 뉴스 검색
+        self.search_news(topic)
 
-# 좌측 메뉴 프레임 설정
-menu_frame = tk.Frame(root, bg='#68a6fc')
-menu_frame.pack(fill='y', side='left', padx=10)
+    def search_news(self, topic):
+        news_data = get_news_search_result(topic)
+        if news_data:
+            self.display_news(news_data)
+        else:
+            messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
 
-# 메뉴 버튼 스타일 설정
-menu_button_font = tkFont.Font(family='Helvetica', size=12)
+    def display_news(self, news_data):
+        for widget in self.news_frame.winfo_children():
+            widget.destroy()
 
-# '내 정보' 버튼
-btn_my_info = tk.Button(menu_frame, text='내 정보', font=menu_button_font, command=open_info_window)
-btn_my_info.pack(fill='x', pady=5)
+        for item in news_data['items']:
+            clean_title = clean_html(item['title'])
+            clean_description = clean_html(item['description'])
+            link = item['link']
+            pubDate = item['pubDate']
+            source = item['originallink'].split('/')[2].replace('www.', '')
 
-# '내 관심 뉴스 골라보기' 버튼
-btn_fav_news = tk.Button(menu_frame, text='내 관심 뉴스 골라보기', font=menu_button_font, command=open_fav_news_window)
-btn_fav_news.pack(fill='x', pady=5)
+            ttk.Label(self.news_frame, text=f"{source} | {pubDate}", font=('Helvetica', 10)).pack(anchor='w')
+            title_label = ttk.Label(self.news_frame, text=clean_title, font=('Helvetica', 12, 'bold'), foreground="blue", cursor="hand2")
+            title_label.pack(anchor='w')
+            title_label.bind("<Button-1>", lambda e, link=link: webbrowser.open(link))
+            ttk.Label(self.news_frame, text=clean_description, font=('Helvetica', 10)).pack(anchor='w')
 
-# '최근 열람한 기사와 비슷한 내용의 기사' 버튼
-btn_similar_news = tk.Button(menu_frame, text='최근 열람한 기사와 비슷한 내용의 기사', font=menu_button_font, command=open_similar_news_window)
-btn_similar_news.pack(fill='x', pady=5)
+    def handle_search(self, event=None):
+        search_query = self.search_entry.get().strip()
+        if search_query:
+            self.search_news(search_query)
+        else:
+            messagebox.showinfo('알림', '검색어가 없습니다.')
 
-# 검색창 입력 필드
-search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
-search_entry.pack(side='left', padx=(10, 0), pady=10)
+    def about(self):
+        messagebox.showinfo("정보", "개인화된 뉴스 피드 애플리케이션입니다.\n원하시는 키워드는 검색하실 수 있습니다.")
 
-# 검색 버튼 이미지 로드 및 설정
-search_img = Image.open('../Image/search.png')  # 이미지 파일 위치
-search_img = search_img.resize((25, 25)) # 이미지 사이즈 조절
-search_photo = ImageTk.PhotoImage(search_img)
+    def privacy(self):
+        """내 정보 클릭시 MyInfo 호출 subprocess 사용"""
+        messagebox.showinfo("내 정보", "자신이 선택한 주제입니다.\n")
 
+    def exit_app(self):
+        if messagebox.askyesno("종료", "애플리케이션을 종료하시겠습니까?"):
+            self.root.destroy()
 
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = NewsFeedApp(root)
+    root.mainloop()
 
-# 캔버스 생성 및 검색 프레임에 추가
-# 캔버스 생성 및 검색 프레임에 추가, 테두리 없음 설정
-search_canvas = Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)  # 캔버스 크기 및 배경색, 테두리 설정
-search_canvas.pack(side='left', padx=10, pady=10)
-
-# 캔버스 위에 이미지 배치
-# 이미지 사이즈 조절이 이미 되어있으므로, 캔버스 크기에 맞게 조절한 이미지 사용
-canvas_image = search_canvas.create_image(17, 17, image=search_photo)  # 캔버스 중앙에 이미지 배치
-
-# 캔버스에 마우스 클릭 이벤트 바인딩하여 검색 기능 실행
-def on_canvas_click(event):
-    handle_search()
-
-search_canvas.bind("<Button-1>", on_canvas_click)  # 마우스 왼쪽 버튼 클릭 시 이벤트 연결
-
-# 엔터 키를 눌렀을 때 검색이 되도록 바인딩, 함수 호출 수정
-search_entry.bind('<Return>', handle_search)
-
-# 뉴스 항목을 Canvas 위에 표시하는 함수
-
-# 뉴스 프레임과 스크롤바를 포함한 Canvas 설정
-
-
-
-# 배경색 설정을 위한 메인 프레임
-main_frame = tk.Frame(root, bg='#68a6fc')
-main_frame.pack(fill='x', expand=False)
-
-# 스크롤 가능한 프레임 설정
-scrollable_frame = tk.Frame(main_frame, bg='#68a6fc')
-scrollable_frame.pack(side='left', fill='x', expand=True)
-
-# 주제 목록
-topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교", "날씨"]
-topic_labels = []
-
-# 주제 표시
-for topic in topics:
-    label_font = tkFont.Font(family='Helvetica', size=12, weight='bold')  # 폰트 설정
-    topic_label = tk.Label(scrollable_frame, text=topic, fg='white', bg='#68a6fc', padx=6, font=label_font)
-    topic_label.pack(side='left', padx=4, pady=4)
-    topic_label.bind("<Button-1>", lambda e, t=topic: on_topic_click(e, t))
-    topic_labels.append(topic_label)  # 추후 배경색 변경을 위해 저장
-
-
-# 뉴스 프레임 생성
-news_frame = ttk.Frame(root)
-news_frame.pack(fill='both', expand=True, padx=10, pady=10)
-# 주제 버튼 생성 코드 뒤에 초기 뉴스 로딩 호출
-load_initial_news()
-
-root.mainloop()
 
