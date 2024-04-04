@@ -1,15 +1,39 @@
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont
 from PIL import Image, ImageTk
+from tkinter import messagebox  # 로그인 결과에 대한 팝업 메시지를 표시하기 위해
 import subprocess
-
+import requests
+import sys
 def login_action():
-    print("로그인 시도")  # 실제 로그인 로직으로 대체해야 함
+    username = entry_id.get()  # 사용자가 입력한 ID를 가져옵니다.
+    password = entry_pw.get()  # 사용자가 입력한 비밀번호를 가져옵니다.
+
+    # 서버의 로그인 엔드포인트 URL
+    login_url = "http://localhost:5000/login"
+
+    # 로그인 요청을 위한 데이터
+    data = {'username': username, 'password': password}
+
+    try:
+        # 서버로 POST 요청을 보냅니다.
+        response = requests.post(login_url, json=data)
+
+        if response.status_code == 200:
+            # 로그인 성공
+            messagebox.showinfo("로그인 성공", "성공적으로 로그인되었습니다.")
+            # 여기에 로그인 성공 후의 로직을 추가할 수 있습니다. 예: 메인 화면으로 전환
+        else:
+            # 로그인 실패 (서버에서 200 이외의 상태 코드 반환)
+            messagebox.showerror("로그인 실패", "ID 또는 비밀번호가 잘못되었습니다.")
+    except requests.exceptions.RequestException as e:
+        # 서버 연결 실패 등의 네트워크 오류 처리
+        messagebox.showerror("서버 연결 실패", "서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.")
 
 def open_register_window():
     # 로그인 창 숨기기
     root.withdraw()
     # 회원가입 파일 실행
-    subprocess.run(["python", "registerP.py"], check=True)
+    subprocess.run(["python", "..\\GUI\\registerP.py"], check=True)
     root.deiconify()  # subprocess 실행이 완료된 후, 로그인 창 다시 보이기
 
 root = Tk()
@@ -21,7 +45,7 @@ root.resizable(False, False)
 buttonFont = tkFont.Font(family="Arial", size=10, weight="bold")
 
 #상대경로로 배경사진을 지정후 600X650창의 크기로 설정
-image_path = 'NewMyroom.png'
+image_path = '..\\Image\\NewMyroom.png'
 image = Image.open(image_path).resize((600, 650), Image.LANCZOS)
 photo = ImageTk.PhotoImage(image)
 

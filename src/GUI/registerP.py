@@ -9,7 +9,7 @@ def on_check(event):
         for tag in tags:
             if tag in interests:
                 item_id, state = interest_check_states[tag]
-                # 상태 변경 전에 선택된 관심사의 수를 검사
+                # 상태 변경 전에 선택된 관심사의 수를 검사123
                 selected_count = sum(st for _, st in interest_check_states.values())
                 if not state and selected_count >= 3:
                     messagebox.showinfo("제한", "관심사는 최대 3개까지만 선택할 수 있습니다.")
@@ -35,7 +35,7 @@ root.resizable(False, False)
 entryFont = tkFont.Font(family="Arial", size=10,weight="bold")
 buttonFont = tkFont.Font(family="Arial", size=10, weight="bold")
 # 배경 이미지 설정
-bg_image_path = 'register.png'
+bg_image_path = '../Image/Register.png'
 bg_image = Image.open(bg_image_path).resize((600, 650), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
 
