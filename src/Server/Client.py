@@ -2,10 +2,13 @@
 import requests
 from tkinter import messagebox
 import sys
-
+import tkinter as tk
+from src.GUI.MAINFORM import NewsFeedApp  # MainForm.py 파일에서 show_main_form 함수를 임포트
+import subprocess
 class Client:
     def __init__(self, server_url):
         self.server_url = server_url
+
 
     def check_server(self):
         """서버 연결을 확인합니다."""
@@ -21,22 +24,6 @@ class Client:
             print("서버 연결 실패:", e)
             return False
 
-
-    def login(self, username, password):
-        """서버에 로그인을 시도하고 결과를 반환합니다."""
-        login_endpoint = f"{self.server_url}/login"
-        data = {'username': username, 'password': password}
-        try:
-            response = requests.post(login_endpoint, json=data)
-            if response.status_code == 200:
-                print("로그인 성공")
-                return True
-            else:
-                print("로그인 실패:", response.text)
-                return False
-        except requests.exceptions.RequestException as e:
-            print("서버 연결 실패:", e)
-            return False
 
 def login_action():
     sys.path.append("../GUI")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
@@ -57,6 +44,7 @@ def login_action():
         if response.status_code == 200:
             # 로그인 성공
             messagebox.showinfo("로그인 성공", "성공적으로 로그인되었습니다.")
+            subprocess.run(["python", "..\\GUI\\MAINFORM.py"])
             # 여기에 로그인 성공 후의 로직을 추가할 수 있습니다. 예: 메인 화면으로 전환
         else:
             # 로그인 실패 (서버에서 200 이외의 상태 코드 반환)
