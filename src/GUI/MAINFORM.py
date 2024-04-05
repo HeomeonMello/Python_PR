@@ -97,7 +97,7 @@ class NewsFeedApp:
         canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # 컨테이너에 캔버스와 스크롤바를 배치
+        # 컨테이너에 캔버스와 스크롤바를 배치1
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
