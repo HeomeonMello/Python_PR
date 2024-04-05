@@ -2,9 +2,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
-from PIL import Image, ImageTk
-from src.main.API import get_news_search_result, clean_html
 
+import link
+from PIL import Image, ImageTk
+from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
+                          get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines)
 class NewsFeedApp:
     def __init__(self, root):
         self.root = root
@@ -19,6 +21,15 @@ class NewsFeedApp:
         self.create_topic_frame()
         self.create_news_frame()
         self.load_initial_news()
+        """self.topic_functions = {
+            "정치": self.load_Politics_headlines,
+            "경제": self.load_Economy_headlines,
+            "사회": self.load_Society_headlines,
+            "생활/문화" : self.load_Life_headlines,
+            "세계": self.load_World_headlines,
+            "IT과학" : self.load_IT_headlines,
+
+        }"""
 
     def create_menu(self):
         menu_bar = tk.Menu(self.root)
@@ -67,7 +78,7 @@ class NewsFeedApp:
     def create_news_frame(self):
         # 뉴스 프레임 컨테이너 생성 (프레임의 위치와 크기를 place를 이용해 지정)
         container = ttk.Frame(self.root)
-        container.place(x=695, y=120, width=1000, height=470)  # 윈도우의 오른쪽 900x500 영역에 위치
+        container.place(x=0, y=120, width=1000, height=470)  # 윈도우의 오른쪽 900x500 영역에 위치
 
         # 스크롤바 생성
         canvas = tk.Canvas(container, width=880, height=480)  # canvas 크기를 조금 더 작게 설정하여 scrollbar에 공간을 제공
@@ -104,7 +115,34 @@ class NewsFeedApp:
         event.widget.config(bg='#1859b5')
 
         # 선택된 주제의 뉴스 검색
+        # 선택된 토픽에 맞는 함수를 호출
+
         self.search_news(topic)
+    """ 공사중 (헤드라인 뉴스를 가져오기 위한 웹크롤링)
+        if topic in self.topic_functions:
+            self.topic_functions[topic]()
+    def load_Politics_headlines(self):
+        headlines = get_politics_headlines()
+        self.display_news(headlines)
+
+    def load_World_headlines(self):
+        headlines = get_World_headlines()
+        self.display_news(headlines)
+    def load_IT_headlines(self):
+        headlines = get_IT_headlines()
+        self.display_news(headlines)
+    def load_Car_headlines(self):
+        headlines = get_Car_headlines()
+        self.display_news(headlines)
+    def load_Life_headlines(self):
+        headlines = get_Life_headlines()
+        self.display_news(headlines)
+    def load_Economy_headlines(self):
+        headlines = get_Economy_headlines()
+        self.display_news(headlines)
+    def load_Society_headlines(self):
+        headlines = get_Society_headlines()
+        self.display_news(headlines)"""
 
     def search_news(self, topic):
         news_data = get_news_search_result(topic)
@@ -114,22 +152,28 @@ class NewsFeedApp:
             messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
 
     def display_news(self, news_data):
+        # 뉴스 프레임 내의 기존 위젯들을 모두 제거
         for widget in self.news_frame.winfo_children():
             widget.destroy()
 
-        for item in news_data['items']:
-            clean_title = clean_html(item['title'])
-            clean_description = clean_html(item['description'])
-            link = item['link']
-            pubDate = item['pubDate']
-            source = item['originallink'].split('/')[2].replace('www.', '')
+        # news_data가 리스트라면 그대로 사용, 딕셔너리라면 'items' 키에서 데이터를 가져옴
+        items = news_data if isinstance(news_data, list) else news_data.get('items', [])
 
-            ttk.Label(self.news_frame, text=f"{source} | {pubDate}", font=('Helvetica', 10)).pack(anchor='w')
-            title_label = ttk.Label(self.news_frame, text=clean_title, font=('Helvetica', 12, 'bold'), foreground="blue", cursor="hand2")
+        # 데이터 표시
+        for item in items:
+            # API 호출 결과 또는 직접 스크랩한 데이터 처리
+            title = clean_html(item.get('title', ''))
+            link = item.get('link', '')
+
+            # 뉴스 제목과 링크 표시
+            ttk.Label(self.news_frame, text=f"{title}", font=('Helvetica', 10)).pack(anchor='w')
+
+            # 링크를 올바르게 열기 위한 람다 함수 수정
+            # 람다 함수에 현재 link 값을 캡처하기 위해 기본값을 사용
+            title_label = ttk.Label(self.news_frame, text=title, font=('Helvetica', 12, 'bold'), foreground="blue",
+                                    cursor="hand2")
             title_label.pack(anchor='w')
-            title_label.bind("<Button-1>", lambda e, link=link: webbrowser.open(link))
-            ttk.Label(self.news_frame, text=clean_description, font=('Helvetica', 10)).pack(anchor='w')
-
+            title_label.bind("<Button-1>", lambda e, l=link: webbrowser.open(l))
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()
         if search_query:
