@@ -34,7 +34,7 @@ def login_action():
     # 서버의 로그인 엔드포인트 URL
     login_url = "http://localhost:5000/login"
 
-    # 로그인 요청을 위한 데이터
+    # 로그인 요청을 위한 데이터 gvh
     data = {'username': username, 'password': password}
 
     try:
