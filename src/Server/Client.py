@@ -2,9 +2,8 @@
 import requests
 from tkinter import messagebox
 import sys
+from src.GUI.MAINFORM import NewsFeedApp
 import tkinter as tk
-from src.GUI.MAINFORM import NewsFeedApp  # MainForm.py 파일에서 show_main_form 함수를 임포트
-import subprocess
 class Client:
     def __init__(self, server_url):
         self.server_url = server_url
@@ -26,26 +25,29 @@ class Client:
 
 
 def login_action():
-    sys.path.append("../GUI")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
-    from src.GUI.LOGIN import entry_id, entry_pw
-    username = entry_id.get()  # 사용자가 입력한 ID를 가져옵니다.
-    password = entry_pw.get()  # 사용자가 입력한 비밀번호를 가져옵니다.
+    from src.GUI.LOGIN import entry_id, entry_pw,root
+    username = entry_id.get()
+    password = entry_pw.get()
 
-    # 서버의 로그인 엔드포인트 URL
     login_url = "http://localhost:5000/login"
-
-    # 로그인 요청을 위한 데이터 gvh
     data = {'username': username, 'password': password}
 
     try:
-        # 서버로 POST 요청을 보냅니다.
         response = requests.post(login_url, json=data)
-        print(data)
         if response.status_code == 200:
-            # 로그인 성공
-            messagebox.showinfo("로그인 성공", "성공적으로 로그인되었습니다.")
-            subprocess.run(["python", "..\\GUI\\MAINFORM.py"])
-            # 여기에 로그인 성공 후의 로직을 추가할 수 있습니다. 예: 메인 화면으로 전환
+            # 로그인 성공 시, 로그인 창 숨기기
+            root.withdraw()
+            response_data = response.json()
+            access_token = response_data['access_token']
+
+            # 메인 폼 생성 및 사용자 정보 전달
+            main_root = tk.Toplevel()  # 메인 폼을 위한 새로운 창 생성
+            app = NewsFeedApp(main_root, username, access_token)
+            def on_close():
+                root.destroy()  # 전체 애플리케이션 종료
+            main_root.protocol("WM_DELETE_WINDOW", on_close)  # 닫힘 이벤트 핸들러 등록
+
+            main_root.mainloop()
         else:
             # 로그인 실패 (서버에서 200 이외의 상태 코드 반환)
             messagebox.showerror("로그인 실패", "ID 또는 비밀번호가 잘못되었습니다.")
