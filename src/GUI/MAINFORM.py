@@ -176,6 +176,7 @@ class NewsFeedApp:
             title_label.bind("<Button-1>", lambda e, l=link: webbrowser.open(l))
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()
+
         if search_query:
             self.search_news(search_query)
         else:
