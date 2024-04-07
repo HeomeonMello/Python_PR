@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
-import link
+import subprocess
 from PIL import Image, ImageTk
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines)
@@ -13,6 +13,8 @@ class NewsFeedApp:
         self.username = username
         self.access_token = access_token
         self.search_photo = search_photo # 이미지를 저장할 속성 추가
+        self.is_panel_visible = False
+        self.panel_width = 200
         self.setup_ui()
         self.load_user_info()
 
@@ -109,7 +111,7 @@ class NewsFeedApp:
         my_info_button.pack(pady=60)
 
         # '.' 글씨를 추가하는 코드
-        dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                         ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
+        dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                 ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
         dot_label.pack(side='bottom', anchor='se')
 
     def toggle_side_panel(self, _=None):
