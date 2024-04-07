@@ -2,9 +2,10 @@
 #server.py
 from flask import Flask, request, jsonify
 from src.DB import db_connection
-
+from flask_jwt_extended import JWTManager, create_access_token
 app = Flask(__name__)
-
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # JWT를 위한 시크릿 키
+jwt = JWTManager(app)
 @app.route('/ping', methods=['GET'])
 def ping():
     """서버 상태 확인을 위한 함수"""
@@ -36,7 +37,8 @@ def login():
     password = data.get('password')  # 비밀번호를 그대로 사용합니다.
 
     if db_connection.login(userid, password):
-        return jsonify({'message': 'Login successful'}), 200
+        access_token = create_access_token(identity=userid)
+        return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 401
 
