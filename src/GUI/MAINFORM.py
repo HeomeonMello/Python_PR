@@ -2,12 +2,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
-import sys
 import link
 from PIL import Image, ImageTk
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines)
 class NewsFeedApp:
+
     def __init__(self, root, username=None, access_token=None,search_photo= None):
         self.root = root
         self.username = username
@@ -15,6 +15,7 @@ class NewsFeedApp:
         self.search_photo = search_photo # 이미지를 저장할 속성 추가
         self.setup_ui()
         self.load_user_info()
+
     def setup_ui(self):
         self.root.title("개인화된 뉴스 피드")
         self.root.geometry("1700x900")
@@ -24,6 +25,7 @@ class NewsFeedApp:
         self.create_topic_frame()
         self.create_news_frame()
         self.load_initial_news()
+        self.create_side_panel()
         """self.topic_functions = {
             "정치": self.load_Politics_headlines,
             "경제": self.load_Economy_headlines,
@@ -69,6 +71,67 @@ class NewsFeedApp:
         search_canvas.create_image(17, 17, image=self.search_photo)
         search_canvas.bind("<Button-1>", self.handle_search)
         search_canvas.image = self.search_photo
+
+        # 설정 버튼 이미지 로드 및 버튼화
+        setting_img = Image.open('../Image/setting.png').resize((25, 25))
+        setting_photo = ImageTk.PhotoImage(setting_img)
+
+        # 설정 버튼으로 사용될 캔버스 생성 및 오른쪽에 배치
+        setting_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
+        setting_canvas.pack(side='right', padx=10, pady=10)  # 오른쪽에 배치
+        setting_canvas.create_image(17, 17, image=setting_photo)
+        setting_canvas.bind("<Button-1>", self.toggle_side_panel)  # 오른쪽 패널을 여는 기능 바인딩
+        setting_canvas.image = setting_photo
+
+    def create_side_panel(self):
+        self.side_panel = tk.Frame(self.root, width=self.panel_width, height=500, bg='#68a6fc')
+        initial_x = self.root.winfo_screenwidth()
+        self.side_panel.place(x=initial_x, y=0)  # 초기 위치 오른쪽 바깥으로 설정하여 숨김
+
+        close_button = tk.Button(self.side_panel, text="X", bg="#68a6fc", fg="white", borderwidth=0,
+                                 font=('Helvetica', 25, 'bold'),
+                                 command=self.toggle_side_panel)
+        close_button.pack(anchor='ne')
+
+        # open_Myinfo_window 함수를 my_info_button 생성 전에 정의합니다.
+        def open_Myinfo_window():
+            # 내 정보 파일 실행
+            try:
+                subprocess.run(["python", "..\\GUI\\MyInfo.py"], check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Error: {e}")
+
+        my_info_button = tk.Button(self.side_panel, text="내 정보", bg='#68a6fc',
+                                   fg='white',
+                                   font=('Helvetica', 20),
+                                   highlightbackground='#68a6fc', highlightthickness=0, bd=0, relief='flat',
+                                   command=open_Myinfo_window)  # 여기서 함수를 command로 지정합니다.
+        my_info_button.pack(pady=60)
+
+        # '.' 글씨를 추가하는 코드
+        dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                         ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
+        dot_label.pack(side='bottom', anchor='se')
+
+    def toggle_side_panel(self, _=None):
+        # 사이드 패널이 화면 오른쪽에서 왼쪽으로 이동하게끔 시작 위치 변경
+        if not self.is_panel_visible:
+            target_x = self.root.winfo_width() - self.panel_width  # 사이드 패널을 보이게 할 위치
+        else:
+            target_x = self.root.winfo_width()  # 사이드 패널을 숨길 위치
+        self.slide_panel(target_x)
+        self.is_panel_visible = not self.is_panel_visible
+
+    def slide_panel(self, target_x):
+        current_x = self.side_panel.winfo_x()
+        step = 10  # 이동 속도 조절을 위한 단계 값
+        if current_x < target_x:
+            new_x = min(current_x + step, target_x)  # 오른쪽으로 이동
+        else:
+            new_x = max(current_x - step, target_x)  # 왼쪽으로 이동
+
+        self.side_panel.place(x=new_x, y=0)
+        if new_x != target_x:  # 목표 위치에 도달하지 않았다면 계속 이동
+            self.root.after(10, lambda: self.slide_panel(target_x))
 
     def create_topic_frame(self):
         self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교",
@@ -185,6 +248,7 @@ class NewsFeedApp:
             title_label.bind("<Button-1>", lambda e, l=link: webbrowser.open(l))
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()
+
         if search_query:
             self.search_news(search_query)
         else:

@@ -17,7 +17,7 @@ def on_check(event):
         for tag in tags:
             if tag in interests:
                 item_id, state = interest_check_states[tag]
-                # 상태 변경 전에 선택된 관심사의 수를 검사123
+                # 상태 변경 전에 선택된 관심사의 수를 검사
                 selected_count = sum(st for _, st in interest_check_states.values())
                 if not state and selected_count >= 3:
                     messagebox.showinfo("제한", "관심사는 최대 3개까지만 선택할 수 있습니다.")
@@ -126,8 +126,20 @@ for i, interest in enumerate(interests):
     y_position = checkbox_start_y + row * checkbox_interval_y
     check_id = canvas.create_rectangle(x_position, y_position, x_position + 20, y_position + 20, outline="#faa0a0", tags=("check", interest))
     canvas.create_text(x_position + 35, y_position + 10, text=interest, anchor="w", font=entryFont, tags=("check", interest))
-    interest_check_states[interest] = (check_id, False)
 
+    interest_check_states[interest] = (check_id, False)
+for i, interest in enumerate(interests):
+    col = i % num_columns
+    row = i // num_columns
+    x_position = checkbox_start_x + col * checkbox_interval_x
+    y_position = checkbox_start_y + row * checkbox_interval_y
+    check_id = canvas.create_rectangle(x_position, y_position, x_position + 20, y_position + 20, outline="#faa0a0", fill="", tags=("check", interest))  # 배경색을 채우지 않음
+    canvas.create_text(x_position + 35, y_position + 10, text=interest, anchor="w", font=entryFont, tags=("check", interest))
+    # 내부 사각형 추가
+    # 내부 사각형의 fill을 ""로 설정하여 투명하게 만듭니다. 여기서는 예시로 배경색을 적용하지 않았습니다만,
+    # 실제 사용 환경에서는 적절한 배경색을 적용할 수 있습니다.
+    canvas.create_rectangle(x_position, y_position, x_position + 20, y_position + 20, outline="", fill="", tags=("check", interest))
+    interest_check_states[interest] = (check_id, False)
 canvas.tag_bind("check", "<Button-1>", on_check)
 
 # 회원가입 버튼
