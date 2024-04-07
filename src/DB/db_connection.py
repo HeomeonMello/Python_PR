@@ -84,8 +84,6 @@ def register_user(username, password, userid, interests):
     cursor.close()
     return True
 
-
-
 def login(userid, password):
     connection = get_db_connection()
     if connection is None:
