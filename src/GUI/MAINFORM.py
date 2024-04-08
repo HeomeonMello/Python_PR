@@ -218,10 +218,11 @@ class NewsFeedApp:
         headlines = get_Society_headlines()
         self.display_news(headlines)"""
 
-    def search_news(self, topic):
-        news_data = get_news_search_result(topic)
+    def search_news(self, query):
+        # get_news_search_result 함수를 사용하여 뉴스 데이터 가져오기
+        news_data = get_news_search_result(query)
         if news_data:
-            self.display_news(news_data)
+            self.display_news(news_data['items'])  # 'items' 내의 뉴스 데이터를 화면에 표시
         else:
             messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
 
@@ -248,13 +249,16 @@ class NewsFeedApp:
                                     cursor="hand2")
             title_label.pack(anchor='w')
             title_label.bind("<Button-1>", lambda e, l=link: webbrowser.open(l))
+
     def handle_search(self, event=None):
-        search_query = self.search_entry.get().strip()
+        search_query = self.search_entry.get().strip()  # 검색어 가져오기
 
         if search_query:
+            # 검색어가 있다면, 뉴스 검색 함수 호출
             self.search_news(search_query)
         else:
-            messagebox.showinfo('알림', '검색어가 없습니다.')
+            # 검색어가 없다면, 사용자에게 알림
+            messagebox.showinfo('알림', '검색어를 입력해 주세요.')
 
     def about(self):
         messagebox.showinfo("정보", "개인화된 뉴스 피드 애플리케이션입니다.\n원하시는 키워드는 검색하실 수 있습니다.")
@@ -274,4 +278,3 @@ if __name__ == "__main__":
     access_token = "액세스 토큰"
     app = NewsFeedApp(root, username, access_token)
     root.mainloop()
-

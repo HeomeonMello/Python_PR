@@ -17,6 +17,7 @@ def get_db_connection():
     except cx_Oracle.DatabaseError as e:
         print(f"Database connection failed: {e}")
         return None
+
 def check_db_connection():
     connection = get_db_connection()
     if connection is not None:
