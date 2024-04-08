@@ -278,6 +278,224 @@ def get_World_headlines():
         print("An error occurred during news page request:", e)
     return []
 
-if __name__ == '__main__':
-    if __name__ == "__main__":
-        get_news_search_result("Python")
+def get_Health_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/241"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+
+def get_Travel_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/237"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+def get_Food_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/238"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+def get_Fashion_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/376"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+
+def get_Exhibition_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/242"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+
+def get_Book_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/243"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []
+
+def get_Religion_headlines():
+    # "자동차/시승기" 섹션 URL 수정 필요
+    url = "https://news.naver.com/breakingnews/section/103/244"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
+
+            headlines = []
+            for item in news_items:
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
+        else:
+            print("News page request failed with status code:", response.status_code)
+    except Exception as e:
+        print("An error occurred during news page request:", e)
+    return []

@@ -1,11 +1,14 @@
 #MAINFORM.py
+import requests
+from io import BytesIO
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 import subprocess
 from PIL import Image, ImageTk
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
-                          get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines)
+                          get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
+                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines)
 class NewsFeedApp:
 
     def __init__(self, root, username=None, access_token=None,search_photo= None):
@@ -28,15 +31,24 @@ class NewsFeedApp:
         self.create_news_frame()
         self.load_initial_news()
         self.create_side_panel()
-        """self.topic_functions = {
+        self.create_headline_frame()
+        self.topic_functions = {
             "정치": self.load_Politics_headlines,
             "경제": self.load_Economy_headlines,
             "사회": self.load_Society_headlines,
             "생활/문화" : self.load_Life_headlines,
             "세계": self.load_World_headlines,
-            "IT과학" : self.load_IT_headlines,
+            "IT/과학" : self.load_IT_headlines,
+            "건강" : self.load_Health_headlines,
+            "여행/레저" : self.load_Travel_headlines,
+            "음식/맛집" : self.load_Food_headlines,
+            "패션/뷰티" : self.load_Fashion_headlines,
+            "공연/전시" : self.load_Exhibition_headlines,
+            "책" : self.load_Book_headlines,
+            "종교" : self.load_Religion_headlines,
+            "자동차" : self.load_Car_headlines
 
-        }"""
+        }
 
     def load_user_info(self):
         if self.username and self.access_token:
@@ -136,8 +148,7 @@ class NewsFeedApp:
             self.root.after(10, lambda: self.slide_panel(target_x))
 
     def create_topic_frame(self):
-        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교",
-                       "날씨"]
+        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교"]
         self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
         self.topic_frame.pack(fill='x', padx=5, pady=5)
         self.topic_labels = []  # 주제 라벨들을 저장할 리스트
@@ -177,6 +188,48 @@ class NewsFeedApp:
 
         self.news_frame = self.scrollable_frame
 
+    def create_headline_frame(self):
+        container = ttk.Frame(self.root)
+        container.place(x=551, y=120, width=700, height=900)
+
+        self.canvas = tk.Canvas(container)
+        self.canvas.pack(side='left', fill='both', expand=True)
+
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=self.canvas.yview)
+        scrollbar.pack(side='right', fill='y')
+
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        self.headline_frame = ttk.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.headline_frame, anchor="nw")
+
+        self.headline_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+
+    def display_headlines(self, headlines):
+        for widget in self.headline_frame.winfo_children():
+            widget.destroy()
+
+        for i, headline in enumerate(headlines):
+            frame = ttk.Frame(self.headline_frame)
+            frame.grid(row=i, column=0, sticky="ew", padx=10, pady=5)
+
+            if headline['image_url']:
+                try:
+                    response = requests.get(headline['image_url'])
+                    img_data = BytesIO(response.content)
+                    image = Image.open(img_data).resize((100, 100))
+                    photo = ImageTk.PhotoImage(image)
+
+                    image_label = tk.Label(frame, image=photo)
+                    image_label.image = photo
+                    image_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+                except Exception as e:
+                    print(f"Error loading image: {e}")
+
+            title_font = ('Helvetica', 12, 'bold')  # 글씨체 설정
+            title_label = tk.Label(frame, text=headline['title'], fg='blue', font=title_font, cursor='hand2',
+                                   wraplength=500, justify="left")
+            title_label.grid(row=0, column=1, sticky="w")
+            title_label.bind("<Button-1>", lambda e, l=headline['link']: webbrowser.open(l))
     def load_initial_news(self):
         self.search_news("일반")
 
@@ -192,31 +245,52 @@ class NewsFeedApp:
         # 선택된 토픽에 맞는 함수를 호출
 
         self.search_news(topic)
-    """ 공사중 (헤드라인 뉴스를 가져오기 위한 웹크롤링)
+
         if topic in self.topic_functions:
             self.topic_functions[topic]()
     def load_Politics_headlines(self):
         headlines = get_politics_headlines()
-        self.display_news(headlines)
-
+        self.display_headlines(headlines)
     def load_World_headlines(self):
         headlines = get_World_headlines()
-        self.display_news(headlines)
+        self.display_headlines(headlines)
     def load_IT_headlines(self):
         headlines = get_IT_headlines()
-        self.display_news(headlines)
+        self.display_headlines(headlines)
     def load_Car_headlines(self):
         headlines = get_Car_headlines()
-        self.display_news(headlines)
+        self.display_headlines(headlines)
     def load_Life_headlines(self):
         headlines = get_Life_headlines()
-        self.display_news(headlines)
+        self.display_headlines(headlines)
     def load_Economy_headlines(self):
         headlines = get_Economy_headlines()
-        self.display_news(headlines)
+        self.display_headlines(headlines)
     def load_Society_headlines(self):
         headlines = get_Society_headlines()
-        self.display_news(headlines)"""
+        self.display_headlines(headlines)
+    def load_Health_headlines(self):
+        headlines = get_Health_headlines()
+        self.display_headlines(headlines)
+    def load_Travel_headlines(self):
+        headlines = get_Travel_headlines()
+        self.display_headlines(headlines)
+    def load_Food_headlines(self):
+        headlines = get_Food_headlines()
+        self.display_headlines(headlines)
+    def load_Fashion_headlines(self):
+        headlines = get_Fashion_headlines()
+        self.display_headlines(headlines)
+    def load_Book_headlines(self):
+        headlines = get_Book_headlines()
+        self.display_headlines(headlines)
+    def load_Exhibition_headlines(self):
+        headlines = get_Exhibition_headlines()
+        self.display_headlines(headlines)
+    def load_Religion_headlines(self):
+        headlines = get_Religion_headlines()
+        self.display_headlines(headlines)
+
 
     def search_news(self, query):
         # get_news_search_result 함수를 사용하여 뉴스 데이터 가져오기

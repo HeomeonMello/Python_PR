@@ -17,7 +17,7 @@ def get_db_connection():
     except cx_Oracle.DatabaseError as e:
         print(f"Database connection failed: {e}")
         return None
-
+get_db_connection()
 def check_db_connection():
     connection = get_db_connection()
     if connection is not None:
@@ -104,6 +104,38 @@ def login(userid, password):
     else:
         print("로그인 실패: 사용자명 또는 비밀번호가 잘못되었습니다.")
         return False
+def get_user_info_by_userid(userid):
+    """주어진 userid를 이용하여 사용자 정보를 조회합니다."""
+    connection = get_db_connection()
+    if connection is None:
+        print("데이터베이스 연결 실패")
+        return None
+
+    cursor = connection.cursor()
+
+    # 주어진 userid에 해당하는 사용자 정보 조회
+    cursor.execute("""
+        SELECT id, username, name
+        FROM User_Users
+        WHERE name = :userid
+    """, userid=userid)
+
+    user_info = cursor.fetchone()
+
+    if user_info:
+        # 사용자 정보가 존재하는 경우, 정보를 사전 형태로 가공하여 반환
+        user_dict = {
+            "id": user_info[0],
+            "username": user_info[1],
+            "name": user_info[2]
+        }
+        return user_dict
+    else:
+        # 사용자 정보가 존재하지 않는 경우, None 반환
+        print("사용자 정보를 찾을 수 없습니다.")
+        return None
+
+    cursor.close()
 
 def save_user_click(user_id, news_id):
     """사용자가 뉴스를 클릭한 정보를 저장하는 함수"""
