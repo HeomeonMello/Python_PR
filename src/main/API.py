@@ -39,11 +39,31 @@ def get_request_url(api_url):
 
 def get_news_search_result(src_text, start=1, display=10):
     api_url = f"{base_url}{node}?query={quote(src_text)}&start={start}&display={display}"
-    response_decode = get_request_url(api_url)
-    if response_decode:
-        return json.loads(response_decode)
+    response_text = get_request_url(api_url)
+    if response_text:
+        response_json = json.loads(response_text)
+        # 여기에서 이미지 URL 대신 뉴스 기사의 제목, 링크, 요약된 내용을 출력합니다.
+        for item in response_json.get('items', []):
+            print(item.get('title'), item.get('link'))  # 예시 출력
+        return response_json
     return None
 
+
+def get_image_url(image_tag):
+    if not image_tag:
+        return "No image found"
+
+    # 이미지 URL이 'src' 속성에 있는지 확인
+    if image_tag.has_attr('src'):
+        return image_tag['src']
+
+    # 'src' 속성이 없는 경우, 다른 속성들을 확인
+    for attr in ['data-src', 'data-lazy-src']:
+        if image_tag.has_attr(attr):
+            return image_tag[attr]
+
+    # 위 조건들에 모두 해당하지 않는 경우
+    return "No image found"
 def get_politics_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=100"  # 정치 섹션 URL
     headers = {
@@ -53,20 +73,27 @@ def get_politics_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 각 뉴스 항목의 구조에 따라 적절한 선택자 사용
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티를 제거
-                link = item['href']
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 def get_Economy_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=101"  # 정치 섹션 URL
     headers = {
@@ -76,20 +103,27 @@ def get_Economy_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 각 뉴스 항목의 구조에 따라 적절한 선택자 사용
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티를 제거
-                link = item['href']
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 def get_Society_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=102"  # 정치 섹션 URL
     headers = {
@@ -99,20 +133,27 @@ def get_Society_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 각 뉴스 항목의 구조에 따라 적절한 선택자 사용
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티를 제거
-                link = item['href']
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 def get_Life_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=103"
     headers = {
@@ -123,21 +164,27 @@ def get_Life_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 'sh_text_headline' 클래스를 포함하는 <a> 태그 선택
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티 제거하여 제목 추출
-                link = item['href']  # 링크 추출
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
 
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 
 def get_Car_headlines():
     # "자동차/시승기" 섹션 URL 수정 필요
@@ -150,21 +197,27 @@ def get_Car_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # "자동차/시승기" 섹션의 뉴스 항목을 찾기 위한 적절한 선택자 사용
-            # 페이지 구조에 따라 선택자 수정 필요
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._LAZY_LOADING_WRAP')
 
-            reviews = []
+            headlines = []
             for item in news_items:
-                title = item.text.strip()  # 제목에서 불필요한 공백 제거
-                link = item['href']  # 링크 추출
-                reviews.append({'title': title, 'link': link})
-            return reviews
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
+            return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 def get_IT_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=105"  # 정치 섹션 URL
     headers = {
@@ -174,20 +227,27 @@ def get_IT_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 각 뉴스 항목의 구조에 따라 적절한 선택자 사용
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티를 제거
-                link = item['href']
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
 def get_World_headlines():
     url = "https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=104"  # 정치 섹션 URL
     headers = {
@@ -197,17 +257,27 @@ def get_World_headlines():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # 각 뉴스 항목의 구조에 따라 적절한 선택자 사용
-            news_items = soup.select('div.sa_text a')
+            news_items = soup.select('li.sa_item._SECTION_HEADLINE')
 
             headlines = []
             for item in news_items:
-                title = clean_html(item.text)  # HTML 태그 및 엔티티를 제거
-                link = item['href']
-                headlines.append({'title': title, 'link': link})
+                title_tag = item.select_one('.sa_text_title .sa_text_strong')
+                link_tag = item.select_one('.sa_text_title')
+                image_tag = item.select_one('.sa_thumb_link img')
+
+                title = clean_html(title_tag.text) if title_tag else "No title found"
+                link = link_tag['href'] if link_tag else "No link found"
+                image_url = get_image_url(image_tag)
+
+                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+
             return headlines
         else:
-            print("뉴스 페이지 요청 실패:", response.status_code)
+            print("News page request failed with status code:", response.status_code)
     except Exception as e:
-        print("뉴스 페이지 요청 중 오류 발생:", e)
+        print("An error occurred during news page request:", e)
     return []
+
+if __name__ == '__main__':
+    if __name__ == "__main__":
+        get_news_search_result("Python")
