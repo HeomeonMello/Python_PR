@@ -122,7 +122,7 @@ class NewsFeedApp:
                                    command=open_Myinfo_window)  # 여기서 함수를 command로 지정합니다.
         my_info_button.pack(pady=60)
 
-        # '.' 글씨를 추가하는 코드
+        # 이 공백을 안 쓰면 네모가 작아져요
         dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                 ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
         dot_label.pack(side='bottom', anchor='se')
 
