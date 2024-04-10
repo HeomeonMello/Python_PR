@@ -1,4 +1,6 @@
 #MAINFORM.py
+import queue
+import threading
 import requests
 from io import BytesIO
 import tkinter as tk
@@ -19,7 +21,9 @@ class NewsFeedApp:
         self.is_panel_visible = False
         self.panel_width = 200
         self.setup_ui()
+        self.image_queue = queue.Queue()
         self.load_user_info()
+        self.start_image_update_loop()
 
     def setup_ui(self):
         self.root.title("개인화된 뉴스 피드")
@@ -49,6 +53,28 @@ class NewsFeedApp:
             "자동차" : self.load_Car_headlines
 
         }
+
+    def load_image_async(self, image_url, image_label):
+        try:
+            response = requests.get(image_url)
+            img_data = BytesIO(response.content)
+            image = Image.open(img_data).resize((100, 100))
+            photo = ImageTk.PhotoImage(image)
+            self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
+        except Exception as e:
+            print(f"Error loading image: {e}")
+
+    def start_image_update_loop(self):
+        try:
+            while not self.image_queue.empty():
+                image_label, photo = self.image_queue.get_nowait()
+                image_label.configure(image=photo)
+                image_label.image = photo  # 참조 유지
+        except queue.Empty:
+            pass
+        finally:
+            # 100ms 후에 이 메소드를 다시 호출하여 큐를 확인
+            self.root.after(100, self.start_image_update_loop)
 
     def load_user_info(self):
         if self.username and self.access_token:
@@ -187,6 +213,10 @@ class NewsFeedApp:
         scrollbar.pack(side="right", fill="y")
 
         self.news_frame = self.scrollable_frame
+        canvas.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, canvas))
+
+    def on_mousewheel(self, event, canvas):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def create_headline_frame(self):
         container = ttk.Frame(self.root)
@@ -204,28 +234,39 @@ class NewsFeedApp:
 
         self.headline_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
+        # 마우스 휠 이벤트 바인딩을 추가합니다.
+        def _on_mousewheel(event):
+            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _on_unix_mousewheel(event):
+            if event.num == 4:
+                self.canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                self.canvas.yview_scroll(1, "units")
+
+        # OS에 따라 다른 이벤트 바인딩을 사용합니다.
+        if self.root.tk.call('tk', 'windowingsystem') == 'win32':
+            self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        else:
+            self.canvas.bind_all("<Button-4>", _on_unix_mousewheel)
+            self.canvas.bind_all("<Button-5>", _on_unix_mousewheel)
+
     def display_headlines(self, headlines):
         for widget in self.headline_frame.winfo_children():
             widget.destroy()
-
+        loading_image_path = '../Image/loading.png'
+        loading_image = Image.open(loading_image_path).resize((100, 100))
+        photo_loading = ImageTk.PhotoImage(loading_image)
         for i, headline in enumerate(headlines):
             frame = ttk.Frame(self.headline_frame)
             frame.grid(row=i, column=0, sticky="ew", padx=10, pady=5)
-
+            image_label = tk.Label(frame, image=photo_loading)
+            image_label.image = photo_loading  # 참조 유지
+            image_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
             if headline['image_url']:
-                try:
-                    response = requests.get(headline['image_url'])
-                    img_data = BytesIO(response.content)
-                    image = Image.open(img_data).resize((100, 100))
-                    photo = ImageTk.PhotoImage(image)
-
-                    image_label = tk.Label(frame, image=photo)
-                    image_label.image = photo
-                    image_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                except Exception as e:
-                    print(f"Error loading image: {e}")
-
-            title_font = ('Helvetica', 12, 'bold')  # 글씨체 설정
+                # 이미지 로드 작업을 별도의 스레드에서 실행
+                threading.Thread(target=self.load_image_async, args=(headline['image_url'], image_label)).start()
+            title_font = ('Helvetica', 12, 'bold')
             title_label = tk.Label(frame, text=headline['title'], fg='blue', font=title_font, cursor='hand2',
                                    wraplength=500, justify="left")
             title_label.grid(row=0, column=1, sticky="w")
