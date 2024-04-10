@@ -105,7 +105,7 @@ def login(userid, password):
         print("로그인 실패: 사용자명 또는 비밀번호가 잘못되었습니다.")
         return False
 def get_user_info_by_userid(userid):
-    """주어진 userid를 이용하여 사용자 정보를 조회합니다."""
+    """주어진 userid를 이용하여 사용자 정보 및 그의 관심사를 조회합니다."""
     connection = get_db_connection()
     if connection is None:
         print("데이터베이스 연결 실패")
@@ -113,21 +113,24 @@ def get_user_info_by_userid(userid):
 
     cursor = connection.cursor()
 
-    # 주어진 userid에 해당하는 사용자 정보 조회
+    # 주어진 userid에 해당하는 사용자 정보 및 그의 관심사 정보 조회
     cursor.execute("""
-        SELECT id, username, name
-        FROM User_Users
-        WHERE name = :userid
+        SELECT u.id, u.username, u.name, i.interestName
+        FROM User_Users u
+        LEFT JOIN User_UserInterests ui ON u.id = ui.userID
+        LEFT JOIN User_Interests i ON ui.interestID = i.id
+        WHERE u.name = :userid
     """, userid=userid)
 
-    user_info = cursor.fetchone()
+    user_info_rows = cursor.fetchall()
 
-    if user_info:
-        # 사용자 정보가 존재하는 경우, 정보를 사전 형태로 가공하여 반환
+    if user_info_rows:
+        # 사용자 정보 및 관심사 정보를 사전 형태로 가공하여 반환
         user_dict = {
-            "id": user_info[0],
-            "username": user_info[1],
-            "name": user_info[2]
+            "id": user_info_rows[0][0],
+            "username": user_info_rows[0][1],
+            "name": user_info_rows[0][2],
+            "interests": [row[3] for row in user_info_rows if row[3] is not None]  # 관심사가 None이 아닌 경우만 추가
         }
         return user_dict
     else:
@@ -136,6 +139,7 @@ def get_user_info_by_userid(userid):
         return None
 
     cursor.close()
+
 
 def save_user_click(user_id, news_id):
     """사용자가 뉴스를 클릭한 정보를 저장하는 함수"""

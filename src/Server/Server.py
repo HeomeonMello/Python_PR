@@ -1,8 +1,8 @@
-
 #server.py
 from flask import Flask, request, jsonify
 from src.DB import db_connection
-from flask_jwt_extended import JWTManager, create_access_token
+from flask_jwt_extended import JWTManager, create_access_token,jwt_required, get_jwt_identity
+
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # JWT를 위한 시크릿 키
 jwt = JWTManager(app)
@@ -41,6 +41,20 @@ def login():
         return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 401
+
+
+@app.route('/userinfo', methods=['GET'])
+@jwt_required()
+def get_user_info():
+    """사용자 정보를 조회하는 함수"""
+    current_user_id = get_jwt_identity()  # JWT 토큰에서 사용자 ID 추출
+    user_info = db_connection.get_user_info_by_userid(current_user_id)
+
+    if user_info:
+        # 사용자의 관심사 정보도 포함하여 반환
+        return jsonify(user_info), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
