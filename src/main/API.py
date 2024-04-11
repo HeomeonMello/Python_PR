@@ -42,9 +42,8 @@ def get_news_search_result(src_text, start=1, display=10):
     response_text = get_request_url(api_url)
     if response_text:
         response_json = json.loads(response_text)
-        # 여기에서 이미지 URL 대신 뉴스 기사의 제목, 링크, 요약된 내용을 출력합니다.
-        for item in response_json.get('items', []):
-            print(item.get('title'), item.get('link'))  # 예시 출력
+
+
         return response_json
     return None
 
