@@ -1,15 +1,49 @@
+#src.GUI.MyInfo
 import requests
 from tkinter import messagebox
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont, messagebox
 from PIL import Image, ImageTk
-import sys
+from src.Server.Client import get_user_info
+
+def load_user_info():
+    """##############################임시 입니다 ################################################"""
+    user_info = {'UserID': 'kkr', 'id': 6, 'interests': ['정치', '경제', 'IT/과학'], 'username': '김기령'}
+    if user_info:
+        user_id = user_info.get('UserID', '')
+        user_name = user_info.get('username', '')
+        interests_list = user_info.get('interests', [])
+
+        # 사용자 ID 및 이름 업데이트
+        canvas.itemconfig(user_id_text_item, text=f"{user_id}")
+        canvas.itemconfig(user_name_text_item, text=f"#{user_name}")
+
+        # 관심사 텍스트 업데이트
+        interests_text = ", ".join(["#" + interest for interest in interests_list])
+        canvas.itemconfig(interests_text_item, text=f"#{interests_text}")
+
+        # 관심사 체크박스 상태 업데이트
+        for interest in interests:
+            item_id, _ = interest_check_states[interest]
+            if interest in interests_list:
+                canvas.itemconfig(item_id, fill="#e7ff4a")  # 선택된 관심사에 대해 체크 표시
+                interest_check_states[interest] = (item_id, True)
+            else:
+                canvas.itemconfig(item_id, fill="")  # 선택되지 않은 관심사는 체크 해제
+                interest_check_states[interest] = (item_id, False)
+
+
 
 def submit():
     selected_interests = [interest for interest, (_, state) in interest_check_states.items() if state]
     if len(selected_interests) == 0:
         messagebox.showerror("오류", "최소 한 개 이상의 관심사를 선택해야 합니다.")
         return
-
+"""canvas.create_text(30, 50, text=user_id  # ID가 들어갈 자리
+                       , font=("Arial", 20, "bold"), fill="black")
+    canvas.create_text(30, 50, text=user_name  # ID가 들어갈 자리
+                       , font=("Arial", 20, "bold"), fill="#aa7dff")
+    canvas.create_text(100, 140, text="#ㅇㅇ, #ㅇㅇ, #ㅇㅇ"  # 관심사가 들어갈 자리
+                       , font=("Arial", 15, "bold"), fill="#aa7dff")"""
 def on_check(event):
     clicked_items = canvas.find_withtag("current")
     for item in clicked_items:
@@ -48,13 +82,14 @@ canvas.pack(fill="both", expand=True)
 # 배경 이미지 설정
 canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
-canvas.create_text(30, 25, text="I'm", font=("Arial", 20, "bold"), fill="black")
-canvas.create_text(30, 50, text="ID" # ID가 들어갈 자리
-                                 ,font=("Arial", 20, "bold"), fill="black")
-canvas.create_text(190, 110, text="뉴스와 파이썬을 좋아하는 나의 관심사는" #관심사가 들어갈 자리
+canvas.create_text(50, 25, text="I'm", font=("Arial", 20, "bold"), fill="black")
+user_id_text_item = canvas.create_text(90, 50, text="", font=("Arial", 20, "bold"), fill="#aa7dff")
+canvas.create_text(50,80 , text="제 이름은 ", font=("Arial", 15, "bold"), fill="black")
+user_name_text_item = canvas.create_text(130, 80, text="", font=("Arial", 15, "bold"), fill="#aa7dff")
+canvas.create_text(185, 110, text="뉴스와 파이썬을 좋아하는 나의 관심사는" #관심사가 들어갈 자리
                                  , font=("Arial", 15, "bold"), fill="black")
-canvas.create_text(100, 140, text="#ㅇㅇ, #ㅇㅇ, #ㅇㅇ" #관심사가 들어갈 자리
-                                 , font=("Arial", 15, "bold"), fill="#aa7dff")
+interests_text_item = canvas.create_text(99, 140, text="", font=("Arial", 15, "bold"), fill="#aa7dff")
+
 # "관심사를 최대 3개까지 골라주세요." 문구 추가
 canvas.create_text(290, 195, text="관심사를 수정할 수 있습니다.(최대 3개)", font=entryFont, fill="black")
 
@@ -96,5 +131,6 @@ register_button = Button(root, text=" 정보 변경", command=submit,
                          borderwidth=0, relief='flat')
 canvas.create_window(210, 400, window=register_button, anchor="nw", width=160, height=28)
 
+load_user_info()  # 사용자 정보 로드 및 GUI 업데이트
 
 root.mainloop()

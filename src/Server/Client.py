@@ -1,27 +1,21 @@
-#client.py
 import requests
-from tkinter import messagebox
-import sys
+from tkinter import messagebox, Tk
 from src.GUI.MAINFORM import NewsFeedApp
 import tkinter as tk
+import sys
 class Client:
-    def __init__(self, server_url):
+
+    def __init__(self, server_url,userid = None,access_token = None):
         self.server_url = server_url
-
-
+        self.userid = userid
+        self.access_token = access_token
     def check_server(self):
-        """서버 연결을 확인합니다."""
         try:
-            response = requests.get(f"{self.server_url}/ping")  # 서버 상태 확인을 위한 엔드포인트
-            if response.status_code == 200:
-                print("서버 연결 성공")
-                return True
-            else:
-                print("서버 연결 실패:", response.text)
-                return False
-        except requests.exceptions.RequestException as e:
-            print("서버 연결 실패:", e)
+            response = requests.get(f"{self.server_url}/ping")
+            return response.status_code == 200
+        except requests.exceptions.RequestException:
             return False
+
 
 
 def login_action():
@@ -43,6 +37,9 @@ def login_action():
             # 메인 폼 생성 및 사용자 정보 전달
             main_root = tk.Toplevel()  # 메인 폼을 위한 새로운 창 생성
             app = NewsFeedApp(main_root, username, access_token)
+            Client.userid = app.userid
+            Client.access_token = access_token
+            get_user_info()
             def on_close():
                 root.destroy()  # 전체 애플리케이션 종료
             main_root.protocol("WM_DELETE_WINDOW", on_close)  # 닫힘 이벤트 핸들러 등록
@@ -54,7 +51,6 @@ def login_action():
     except requests.exceptions.RequestException as e:
         # 서버 연결 실패 등의 네트워크 오류 처리
         messagebox.showerror("서버 연결 실패", "서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.")
-
 
 def submit_register(username, password, user_id, selected_interests):
     """회원가입 등록 로직 클라이언트와 연동"""
@@ -84,20 +80,32 @@ def submit_register(username, password, user_id, selected_interests):
         messagebox.showerror("오류", "서버 연결 실패")
         # 서버 연결 실패 메시지 표시
 
+def get_user_info():
+    access_token = Client.access_token
+
+    userinfo_url = "http://localhost:5000/userinfo"  # f-string은 여기서 필요하지 않습니다.
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(userinfo_url, headers=headers)
+    if response.status_code == 200:
+        user_info = response.json()  # 응답으로 받은 JSON 데이터를 파이썬 딕셔너리로 변환
+
+        return user_info
+    else:
+        print("사용자 정보를 가져오는 데 실패했습니다.")
+        return None
+
 
 def create_gui():
     sys.path.append("../GUI")  # 상위 디렉토리로 올라간 뒤 GUI 폴더로 내려감
     from src.GUI.LOGIN import root
     root.mainloop()
 
+
 if __name__ == "__main__":
     server_url = "http://localhost:5000"
     client = Client(server_url)
 
     if client.check_server():
-        print("서버와 연결되었습니다.")
-        create_gui()  # 서버에 연결되면 로그인 GUI를 생성하고 표시
+        create_gui()
     else:
-        print("서버에 연결할 수 없습니다.")
         messagebox.showerror("연결 실패", "서버에 연결할 수 없습니다. 서버 상태를 확인하고 다시 시도해주세요.")
-        sys.exit(1)

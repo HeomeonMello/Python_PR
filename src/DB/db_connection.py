@@ -129,7 +129,7 @@ def get_user_info_by_userid(userid):
         user_dict = {
             "id": user_info_rows[0][0],
             "username": user_info_rows[0][1],
-            "name": user_info_rows[0][2],
+            "UserID": user_info_rows[0][2],
             "interests": [row[3] for row in user_info_rows if row[3] is not None]  # 관심사가 None이 아닌 경우만 추가
         }
         return user_dict

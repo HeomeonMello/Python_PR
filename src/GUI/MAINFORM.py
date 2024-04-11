@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 import subprocess
+
 from PIL import Image, ImageTk
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
@@ -15,7 +16,7 @@ class NewsFeedApp:
 
     def __init__(self, root, username=None, access_token=None,search_photo= None):
         self.root = root
-        self.username = username
+        self.userid = username
         self.access_token = access_token
         self.search_photo = search_photo # 이미지를 저장할 속성 추가
         self.is_panel_visible = False
@@ -77,8 +78,8 @@ class NewsFeedApp:
             self.root.after(100, self.start_image_update_loop)
 
     def load_user_info(self):
-        if self.username and self.access_token:
-            messagebox.showinfo("성공", "{}님 반갑습니다.".format(self.username))
+        if self.userid and self.access_token:
+            messagebox.showinfo("성공", "{}님 반갑습니다.".format(self.userid))
             # 여기서 추가 로직을 구현할 수 있습니다. 예: API 호출에 토큰 사용
         else:
             print("로그인한 사용자 정보를 찾을 수 없습니다.")
@@ -105,7 +106,7 @@ class NewsFeedApp:
 
         search_img = Image.open('../Image/search.png').resize((25, 25))
         self.search_photo = ImageTk.PhotoImage(search_img)
-        print(self.search_photo)
+
         search_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
         search_canvas.pack(side='left', padx=10, pady=10)
         search_canvas.create_image(17, 17, image=self.search_photo)
