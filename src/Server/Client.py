@@ -3,12 +3,14 @@ from tkinter import messagebox, Tk
 from src.GUI.MAINFORM import NewsFeedApp
 import tkinter as tk
 import sys
+import subprocess
 class Client:
 
     def __init__(self, server_url,userid = None,access_token = None):
         self.server_url = server_url
         self.userid = userid
         self.access_token = access_token
+        self.user_info = None  # user_info 초기화
     def check_server(self):
         try:
             response = requests.get(f"{self.server_url}/ping")
@@ -80,6 +82,23 @@ def submit_register(username, password, user_id, selected_interests):
         messagebox.showerror("오류", "서버 연결 실패")
         # 서버 연결 실패 메시지 표시
 
+
+
+def open_Myinfo_window():
+    from src.GUI.MyInfo import MyInfo
+    try:
+        user_info = get_user_info()  # get_user_info 함수를 호출하여 사용자 정보를 가져옵니다.
+        if user_info:
+            # MyInfo 창을 생성하고 초기화합니다.
+            my_info_root = tk.Toplevel()  # 새 창을 위한 Toplevel 생성
+            my_info_app = MyInfo(my_info_root, user_info)  # MyInfo 애플리케이션 인스턴스 생성
+            my_info_root.mainloop()
+        else:
+            messagebox.showerror("오류", "사용자 정보를 가져올 수 없습니다.")
+    except Exception as e:
+        print(f"Error: {e}")
+        messagebox.showerror("오류", "내 정보 창을 열 수 없습니다.")
+
 def get_user_info():
     access_token = Client.access_token
 
@@ -87,12 +106,10 @@ def get_user_info():
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(userinfo_url, headers=headers)
     if response.status_code == 200:
-        user_info = response.json()  # 응답으로 받은 JSON 데이터를 파이썬 딕셔너리로 변환
-
-        return user_info
+        Client.user_info = response.json()
     else:
         print("사용자 정보를 가져오는 데 실패했습니다.")
-        return None
+    return Client.user_info
 
 
 def create_gui():

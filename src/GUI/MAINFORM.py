@@ -6,12 +6,13 @@ from io import BytesIO
 import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
-import subprocess
-
 from PIL import Image, ImageTk
+
+
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
                           get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines)
+
 class NewsFeedApp:
 
     def __init__(self, root, username=None, access_token=None,search_photo= None):
@@ -125,6 +126,7 @@ class NewsFeedApp:
         setting_canvas.image = setting_photo
 
     def create_side_panel(self):
+        from src.Server.Client import open_Myinfo_window
         self.side_panel = tk.Frame(self.root, width=self.panel_width, height=500, bg='#68a6fc')
         initial_x = self.root.winfo_screenwidth()
         self.side_panel.place(x=initial_x, y=0)  # 초기 위치 오른쪽 바깥으로 설정하여 숨김
@@ -135,12 +137,7 @@ class NewsFeedApp:
         close_button.pack(anchor='ne')
 
         # open_Myinfo_window 함수를 my_info_button 생성 전에 정의합니다.
-        def open_Myinfo_window():
-            # 내 정보 파일 실행
-            try:
-                subprocess.run(["python", "..\\GUI\\MyInfo.py"], check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error: {e}")
+
 
         my_info_button = tk.Button(self.side_panel, text="내 정보", bg='#68a6fc',
                                    fg='white',
