@@ -218,7 +218,7 @@ class NewsFeedApp:
 
     def create_headline_frame(self):
         container = ttk.Frame(self.root)
-        container.place(x=551, y=120, width=700, height=900)
+        container.place(x=551, y=120, width=670, height=900)
 
         self.canvas = tk.Canvas(container)
         self.canvas.pack(side='left', fill='both', expand=True)
@@ -252,23 +252,35 @@ class NewsFeedApp:
     def display_headlines(self, headlines):
         for widget in self.headline_frame.winfo_children():
             widget.destroy()
+
         loading_image_path = '../Image/loading.png'
         loading_image = Image.open(loading_image_path).resize((100, 100))
         photo_loading = ImageTk.PhotoImage(loading_image)
+
         for i, headline in enumerate(headlines):
             frame = ttk.Frame(self.headline_frame)
             frame.grid(row=i, column=0, sticky="ew", padx=10, pady=5)
+
             image_label = tk.Label(frame, image=photo_loading)
             image_label.image = photo_loading  # 참조 유지
             image_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+
             if headline['image_url']:
                 # 이미지 로드 작업을 별도의 스레드에서 실행
                 threading.Thread(target=self.load_image_async, args=(headline['image_url'], image_label)).start()
+
             title_font = ('Helvetica', 12, 'bold')
             title_label = tk.Label(frame, text=headline['title'], fg='blue', font=title_font, cursor='hand2',
                                    wraplength=500, justify="left")
-            title_label.grid(row=0, column=1, sticky="w")
+            title_label.grid(row=0, column=1, sticky="w", padx=5)
             title_label.bind("<Button-1>", lambda e, l=headline['link']: webbrowser.open(l))
+
+            summary_font = ('Helvetica', 10)
+            summary_label = tk.Label(frame, text=headline['summary'], font=summary_font, wraplength=500, justify="left")
+            summary_label.grid(row=1, column=1, sticky="w", padx=1)
+
+            frame.columnconfigure(1, weight=1)  # 콘텐츠에 맞춰 열 너비 조정
+
     def load_initial_news(self):
         self.search_news("일반")
 

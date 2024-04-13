@@ -79,12 +79,14 @@ def get_politics_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -109,12 +111,14 @@ def get_Economy_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -139,12 +143,14 @@ def get_Society_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -170,12 +176,14 @@ def get_Life_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -203,12 +211,14 @@ def get_Car_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -233,12 +243,14 @@ def get_IT_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -263,12 +275,14 @@ def get_World_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -295,12 +309,14 @@ def get_Health_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -327,12 +343,14 @@ def get_Travel_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -358,12 +376,14 @@ def get_Food_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -389,12 +409,14 @@ def get_Fashion_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -421,12 +443,14 @@ def get_Exhibition_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -453,12 +477,14 @@ def get_Book_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
@@ -485,12 +511,14 @@ def get_Religion_headlines():
                 title_tag = item.select_one('.sa_text_title .sa_text_strong')
                 link_tag = item.select_one('.sa_text_title')
                 image_tag = item.select_one('.sa_thumb_link img')
+                summary_tag = item.select_one('.sa_text_lede')  # 요약 내용 태그
 
                 title = clean_html(title_tag.text) if title_tag else "No title found"
                 link = link_tag['href'] if link_tag else "No link found"
                 image_url = get_image_url(image_tag)
+                summary = summary_tag.text.strip() if summary_tag else "No summary available"
 
-                headlines.append({'title': title, 'link': link, 'image_url': image_url})
+                headlines.append({'title': title, 'link': link, 'image_url': image_url, 'summary': summary})
 
             return headlines
         else:
