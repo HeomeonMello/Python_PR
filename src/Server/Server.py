@@ -56,6 +56,19 @@ def get_user_info():
     else:
         return jsonify({'message': 'User not found'}), 404
 
+@app.route('/update_interests', methods=['PUT'])
+@jwt_required()
+def update_interests():
+    """사용자 관심사를 업데이트하는 함수"""
+    current_user_id = get_jwt_identity()  # JWT 토큰에서 사용자 ID 추출
+    data = request.get_json()
+    new_interests = data.get('interests', [])  # 사용자가 입력한 새로운 관심사 목록
+    print(current_user_id,new_interests)
+    if db_connection.update_user_interests(current_user_id, new_interests):
+        return jsonify({'message': 'User interests updated successfully'}), 200
+    else:
+        return jsonify({'message': 'Failed to update interests'}), 400
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
 

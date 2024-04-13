@@ -1,13 +1,12 @@
-import requests
-from tkinter import messagebox
 from tkinter import Tk, Canvas, Entry, Button, font as tkFont, messagebox
 from PIL import Image, ImageTk
-from src.Server.Client import get_user_info
+
 
 class MyInfo:
-    def __init__(self, root, user_Info = None):
+    def __init__(self, root, user_Info = None, access_token= None):
         self.root = root
         self.user_Info = user_Info
+        self.access_token = access_token
         self.root.title("내 정보")
         self.root.geometry("600x450")
         self.root.resizable(False, False)
@@ -95,10 +94,13 @@ class MyInfo:
                     self.interest_check_states[interest] = (item_id, False)
 
     def submit(self):
+        from src.Server.Client import update_user_interests
         selected_interests = [interest for interest, (_, state) in self.interest_check_states.items() if state]
         if len(selected_interests) == 0:
             messagebox.showerror("오류", "최소 한 개 이상의 관심사를 선택해야 합니다.")
             return
+            # 서버에 관심사 업데이트 요청 보내기
+        update_user_interests(self.user_Info['UserID'], selected_interests, self.access_token)
 
     def on_check(self, event):
         clicked_items = self.canvas.find_withtag("current")
@@ -120,6 +122,7 @@ class MyInfo:
 
 if __name__ == "__main__":
     root = Tk()
-    access_token = {'UserID': 'kkr', 'id': 6, 'interests': ['음식/맛집', '공연/전시', 'IT/과학'], 'username': '김기령'}
-    app = MyInfo(root, access_token)
+    myInfo = {'UserID': 'kkr', 'id': 6, 'interests': ['음식/맛집', '공연/전시', 'IT/과학'], 'username': '김기령'}
+    access_token = 'access_token'
+    app = MyInfo(root, myInfo,access_token)
     root.mainloop()

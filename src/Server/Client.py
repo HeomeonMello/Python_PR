@@ -83,15 +83,16 @@ def submit_register(username, password, user_id, selected_interests):
         # 서버 연결 실패 메시지 표시
 
 
-
 def open_Myinfo_window():
     from src.GUI.MyInfo import MyInfo
     try:
         user_info = get_user_info()  # get_user_info 함수를 호출하여 사용자 정보를 가져옵니다.
+        access_token = Client.access_token
+
         if user_info:
             # MyInfo 창을 생성하고 초기화합니다.
             my_info_root = tk.Toplevel()  # 새 창을 위한 Toplevel 생성
-            my_info_app = MyInfo(my_info_root, user_info)  # MyInfo 애플리케이션 인스턴스 생성
+            my_info_app = MyInfo(my_info_root, user_info,access_token)  # MyInfo 애플리케이션 인스턴스 생성
             my_info_root.mainloop()
         else:
             messagebox.showerror("오류", "사용자 정보를 가져올 수 없습니다.")
@@ -110,6 +111,27 @@ def get_user_info():
     else:
         print("사용자 정보를 가져오는 데 실패했습니다.")
     return Client.user_info
+
+
+def update_user_interests(user_id, new_interests, access_token):
+    """서버에 관심사 업데이트 요청을 보내는 함수"""
+    print(access_token)
+    server_url = "http://localhost:5000/update_interests"  # 서버 주소
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'interests': new_interests
+    }
+    try:
+        response = requests.put(server_url, json=data, headers=headers)
+        if response.status_code == 200:
+            messagebox.showinfo("성공", "관심사가 성공적으로 업데이트 되었습니다.")
+        else:
+            messagebox.showerror("실패", "관심사 업데이트에 실패했습니다.")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("오류", f"서버와의 연결에 실패했습니다: {e}")
 
 
 def create_gui():

@@ -141,6 +141,66 @@ def get_user_info_by_userid(userid):
     cursor.close()
 
 
+def update_user_interests(userid, new_interests):
+    """ 사용자의 관심사를 업데이트하는 함수 """
+    connection = get_db_connection()
+    if connection is None:
+        print("데이터베이스 연결 실패")
+        return False
+
+    cursor = connection.cursor()
+
+    try:
+        # 사용자 ID 조회
+        cursor.execute("SELECT id FROM User_Users WHERE name = :name", {'name': userid})
+        user_id_result = cursor.fetchone()
+        if not user_id_result:
+            print("사용자 ID가 존재하지 않습니다.")
+            return False
+        user_id = user_id_result[0]
+
+        # 기존 관심사 매핑 삭제
+        cursor.execute("DELETE FROM User_UserInterests WHERE userID = :userID", {'userID': user_id})
+
+        # 새로운 관심사 추가
+        for interest in new_interests:
+            # 관심사가 이미 존재하는지 확인
+            cursor.execute("SELECT id FROM User_Interests WHERE interestName = :interestName",
+                           {'interestName': interest})
+            interest_id_result = cursor.fetchone()
+
+            if interest_id_result:
+                interest_id = interest_id_result[0]
+            else:
+                # 관심사 추가
+                new_interest_id = cursor.var(cx_Oracle.NUMBER)
+                cursor.execute("""
+                    INSERT INTO User_Interests (interestName)
+                    VALUES (:interestName)
+                    RETURNING id INTO :new_interest_id
+                """, {'interestName': interest, 'new_interest_id': new_interest_id})
+                interest_id = new_interest_id.getvalue()[0]  # 반환된 ID 값을 추출
+
+            # 사용자와 관심사 매핑 추가
+            cursor.execute("""
+                INSERT INTO User_UserInterests (userID, interestID)
+                VALUES (:userID, :interestID)
+            """, {'userID': user_id, 'interestID': interest_id})
+
+        connection.commit()
+        print("관심사 업데이트 성공")
+        return True
+
+    except Exception as e:
+        print(f"관심사 업데이트 실패: {e}")
+        connection.rollback()
+        return False
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
 def save_user_click(user_id, news_id):
     """사용자가 뉴스를 클릭한 정보를 저장하는 함수"""
     cursor = connection.cursor()
