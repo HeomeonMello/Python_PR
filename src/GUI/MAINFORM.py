@@ -7,11 +7,15 @@ import tkinter as tk
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 from PIL import Image, ImageTk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from wordcloud import WordCloud
+import matplotlib.font_manager as fm
 
 
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
-                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines)
+                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords)
 
 class NewsFeedApp:
 
@@ -35,6 +39,7 @@ class NewsFeedApp:
         self.create_search_frame()
         self.create_topic_frame()
         self.create_news_frame()
+        self.create_keyword_frame()
         self.load_initial_news()
         self.create_side_panel()
         self.create_headline_frame()
@@ -174,7 +179,7 @@ class NewsFeedApp:
     def create_topic_frame(self):
         self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교"]
         self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
-        self.topic_frame.pack(fill='x', padx=5, pady=5)
+        self.topic_frame.pack(fill='x', padx=1, pady=8)
         self.topic_labels = []  # 주제 라벨들을 저장할 리스트
 
         for topic in self.topics:
@@ -218,7 +223,7 @@ class NewsFeedApp:
 
     def create_headline_frame(self):
         container = ttk.Frame(self.root)
-        container.place(x=551, y=120, width=670, height=900)
+        container.place(x=551, y=115, width=670, height=900)
 
         self.canvas = tk.Canvas(container)
         self.canvas.pack(side='left', fill='both', expand=True)
@@ -280,6 +285,44 @@ class NewsFeedApp:
             summary_label.grid(row=1, column=1, sticky="w", padx=1)
 
             frame.columnconfigure(1, weight=1)  # 콘텐츠에 맞춰 열 너비 조정
+
+    def create_keyword_frame(self):
+        container = ttk.Frame(self.root)
+        container.place(x=0, y=550, width=1000, height=335)
+        # 폰트 설정
+        font_path = 'C:/Windows/Fonts/malgun.ttf'
+        prop = fm.FontProperties(fname=font_path)
+        # 키워드 클라우드를 생성하고 표시하는 함수 호출
+        self.display_word_cloud(container, prop)
+
+    def display_word_cloud(self, container, font_properties):
+        # 키워드와 인기도 데이터 가져오기
+        keywords, popularity = get_trending_keywords()
+
+        if not keywords:
+            print("No keywords to display.")  # 키워드 데이터가 없는 경우 메시지 출력
+            return
+
+        # 키워드와 인기도를 딕셔너리로 결합
+        keyword_freq = {word: pop for word, pop in zip(keywords, popularity)}
+
+        # 워드 클라우드 생성
+        wordcloud = WordCloud(font_path=font_properties.get_file(), width=700, height=335,
+                              background_color='white').generate_from_frequencies(keyword_freq)
+
+        # matplotlib Figure 생성
+        fig, ax = plt.subplots(figsize=(10, 3.35), dpi=100)
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis('off')  # 축을 숨깁니다.
+
+        # Tkinter와 호환되는 캔버스에 Figure 삽입
+        canvas = FigureCanvasTkAgg(fig, master=container)
+        canvas_widget = canvas.get_tk_widget()
+
+        # 위치 지정을 위해 place 사용
+        canvas_widget.place(x=-120, y=50, width=800, height=320)  # 원하는 x, y 좌표와 크기 지정
+
+        canvas.draw()
 
     def load_initial_news(self):
         self.search_news("일반")

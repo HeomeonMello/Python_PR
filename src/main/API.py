@@ -526,3 +526,28 @@ def get_Religion_headlines():
     except Exception as e:
         print("An error occurred during news page request:", e)
     return []
+
+
+def get_trending_keywords():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    keyword_url = "https://coinpan.com/free"  # 실제 사용할 URL로 대체 필요
+    response = requests.get(keyword_url, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        keyword_list = soup.select('.realtimeranking_widget_content.popular ul li a')
+
+        keywords = []
+        popularity = []
+
+        for index, keyword in enumerate(keyword_list, start=1):
+            rank = keyword.find('span').text.strip()  # 순위
+            keyword_text = keyword.get_text().strip().replace(rank, '').strip()
+            keywords.append(keyword_text)
+            popularity.append(11 - index)  # 순위를 점수로 변환 (1위 -> 가장 큰 값)
+
+        return keywords, popularity
+    else:
+        print("Failed to load page")
+        return [], []
