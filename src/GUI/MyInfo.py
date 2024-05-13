@@ -72,7 +72,7 @@ class MyInfo:
             self.canvas.tag_bind("check", "<Button-1>", self.on_check)
 
     def load_user_info(self):
-        """임시 사용자 정보입니다."""
+
         user_info = self.user_Info
         if user_info:
             user_id = user_info.get('UserID', '')

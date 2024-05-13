@@ -1,9 +1,9 @@
 #MAINFORM.py
 import queue
 import threading
-import requests
-from io import BytesIO
 import tkinter as tk
+from tkinter import ttk
+from tkinter import PhotoImage
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 from PIL import Image, ImageTk
@@ -15,24 +15,26 @@ import matplotlib.font_manager as fm
 
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
-                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords)
+                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords,get_entertainment_headlines,ImageLoader)
 
 class NewsFeedApp:
 
-    def __init__(self, root, username=None, access_token=None,search_photo= None):
+    def __init__(self, root, username=None, access_token=None):
         self.root = root
         self.userid = username
         self.access_token = access_token
-        self.search_photo = search_photo # 이미지를 저장할 속성 추가
+        self.search_photo = None # 이미지를 저장할 속성 추가
+        self.background_image = None
         self.is_panel_visible = False
         self.panel_width = 200
         self.setup_ui()
         self.image_queue = queue.Queue()
         self.load_user_info()
-        self.start_image_update_loop()
-
+        self.image_loader = ImageLoader(self.root, self.image_queue)
+        self.image_loader.start_image_update_loop()
     def setup_ui(self):
         self.root.title("개인화된 뉴스 피드")
+        self.root.configure(background='white')  # 전체 배경을 하얀색으로 설정
         self.root.geometry("1700x900")
         self.root.resizable(False, False)
         self.create_menu()
@@ -57,31 +59,10 @@ class NewsFeedApp:
             "공연/전시" : self.load_Exhibition_headlines,
             "책" : self.load_Book_headlines,
             "종교" : self.load_Religion_headlines,
-            "자동차" : self.load_Car_headlines
+            "자동차" : self.load_Car_headlines,
+            "연예": self.load_Entertain_headlines
 
         }
-
-    def load_image_async(self, image_url, image_label):
-        try:
-            response = requests.get(image_url)
-            img_data = BytesIO(response.content)
-            image = Image.open(img_data).resize((100, 100))
-            photo = ImageTk.PhotoImage(image)
-            self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
-        except Exception as e:
-            print(f"Error loading image: {e}")
-
-    def start_image_update_loop(self):
-        try:
-            while not self.image_queue.empty():
-                image_label, photo = self.image_queue.get_nowait()
-                image_label.configure(image=photo)
-                image_label.image = photo  # 참조 유지
-        except queue.Empty:
-            pass
-        finally:
-            # 100ms 후에 이 메소드를 다시 호출하여 큐를 확인
-            self.root.after(100, self.start_image_update_loop)
 
     def load_user_info(self):
         if self.userid and self.access_token:
@@ -177,7 +158,7 @@ class NewsFeedApp:
             self.root.after(10, lambda: self.slide_panel(target_x))
 
     def create_topic_frame(self):
-        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "패션/뷰티", "공연/전시", "책", "종교"]
+        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "연예", "패션/뷰티", "공연/전시", "책", "종교"]
         self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
         self.topic_frame.pack(fill='x', padx=1, pady=8)
         self.topic_labels = []  # 주제 라벨들을 저장할 리스트
@@ -190,16 +171,20 @@ class NewsFeedApp:
             self.topic_labels.append(topic_label)
 
     def create_news_frame(self):
-        # 뉴스 프레임 컨테이너 생성 (프레임의 위치와 크기를 place를 이용해 지정)
-        container = ttk.Frame(self.root)
-        container.place(x=0, y=120, width=1000, height=470)  # 윈도우의 오른쪽 900x500 영역에 위치
+        # 테두리를 추가하기 위해 tk.Frame 사용
+        container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
+        container.place(x=5, y=120, width=560, height=455)
 
-        # 스크롤바 생성
-        canvas = tk.Canvas(container, width=880, height=480)  # canvas 크기를 조금 더 작게 설정하여 scrollbar에 공간을 제공
-        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        # 스크롤바와 캔버스를 위한 컨텐츠를 담을 ttk.Frame (ttk 스타일을 유지하고 싶은 경우)
+        inner_container = ttk.Frame(container)
+        inner_container.pack(expand=True, fill='both')
+
+        # 스크롤바 설정
+        canvas = tk.Canvas(inner_container, width=880, height=480)  # 스크롤바 공간을 위해 조금 더 작게 설정
+        scrollbar = ttk.Scrollbar(inner_container, orient="vertical", command=canvas.yview)
         self.scrollable_frame = ttk.Frame(canvas)
 
-        # 스크롤 가능한 프레임에 스크롤바 연결
+        # 스크롤 가능한 프레임 설정
         self.scrollable_frame.bind(
             "<Configure>",
             lambda e: canvas.configure(
@@ -207,11 +192,10 @@ class NewsFeedApp:
             )
         )
 
-        # 캔버스에 스크롤 가능한 프레임을 추가하고, 스크롤바 설정
         canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # 컨테이너에 캔버스와 스크롤바를 배치1
+        # inner_container에 캔버스와 스크롤바를 배치
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -222,8 +206,9 @@ class NewsFeedApp:
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def create_headline_frame(self):
-        container = ttk.Frame(self.root)
-        container.place(x=551, y=115, width=670, height=900)
+        container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
+
+        container.place(x=570, y=120, width=670, height=770)
 
         self.canvas = tk.Canvas(container)
         self.canvas.pack(side='left', fill='both', expand=True)
@@ -269,10 +254,22 @@ class NewsFeedApp:
             image_label = tk.Label(frame, image=photo_loading)
             image_label.image = photo_loading  # 참조 유지
             image_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+            # 배경 이미지 로드
+            background_image_path = '../Image/back.png'
+            pil_image = Image.open(background_image_path)
+            background_image = ImageTk.PhotoImage(pil_image)
+
+            # Canvas 생성 및 배경 이미지 설정
+            if not hasattr(self, 'news_canvas'):
+                self.news_canvas = tk.Canvas(self.news_frame, width=670, height=770, bg='white')
+                self.news_canvas.pack(fill='both', expand=True)
+                self.news_canvas.create_image(0, 0, image=background_image, anchor='nw')
+                self.news_canvas.image = background_image  # 이미지 참조 유지
 
             if headline['image_url']:
-                # 이미지 로드 작업을 별도의 스레드에서 실행
-                threading.Thread(target=self.load_image_async, args=(headline['image_url'], image_label)).start()
+                # 이미지 로드 작업을 ImageLoader 클래스를 사용하여 비동기적으로 실행
+                threading.Thread(target=self.image_loader.load_image_async,
+                                 args=(headline['image_url'], image_label)).start()
 
             title_font = ('Helvetica', 12, 'bold')
             title_label = tk.Label(frame, text=headline['title'], fg='blue', font=title_font, cursor='hand2',
@@ -287,8 +284,8 @@ class NewsFeedApp:
             frame.columnconfigure(1, weight=1)  # 콘텐츠에 맞춰 열 너비 조정
 
     def create_keyword_frame(self):
-        container = ttk.Frame(self.root)
-        container.place(x=0, y=550, width=1000, height=335)
+        container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
+        container.place(x=5, y=580, width=560, height=310)
         # 폰트 설정
         font_path = 'C:/Windows/Fonts/malgun.ttf'
         prop = fm.FontProperties(fname=font_path)
@@ -320,7 +317,7 @@ class NewsFeedApp:
         canvas_widget = canvas.get_tk_widget()
 
         # 위치 지정을 위해 place 사용
-        canvas_widget.place(x=-120, y=50, width=800, height=320)  # 원하는 x, y 좌표와 크기 지정
+        canvas_widget.place(x=0, y=0, width=555, height=295)  # 원하는 x, y 좌표와 크기 지정
 
         canvas.draw()
 
@@ -372,6 +369,9 @@ class NewsFeedApp:
     def load_Food_headlines(self):
         headlines = get_Food_headlines()
         self.display_headlines(headlines)
+    def load_Entertain_headlines(self):
+        headlines = get_entertainment_headlines()
+        self.display_headlines(headlines)
     def load_Fashion_headlines(self):
         headlines = get_Fashion_headlines()
         self.display_headlines(headlines)
@@ -385,38 +385,49 @@ class NewsFeedApp:
         headlines = get_Religion_headlines()
         self.display_headlines(headlines)
 
-
     def search_news(self, query):
         # get_news_search_result 함수를 사용하여 뉴스 데이터 가져오기
         news_data = get_news_search_result(query)
-        if news_data:
-            self.display_news(news_data['items'])  # 'items' 내의 뉴스 데이터를 화면에 표시
+        if news_data:  # 검색 결과가 존재하고, 리스트가 비어 있지 않은 경우
+            filtered_news = news_data  # 여기서 필요하다면 중복 제거 로직을 추가
+            if filtered_news:
+                self.display_news(filtered_news)  # 뉴스 데이터를 화면에 표시
+            else:
+                messagebox.showinfo('결과 없음', '중복을 제외한 결과가 없습니다.')
         else:
             messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
 
     def display_news(self, news_data):
-        # 뉴스 프레임 내의 기존 위젯들을 모두 제거
-        for widget in self.news_frame.winfo_children():
-            widget.destroy()
+        # 배경 이미지 로드
+        background_image_path = '../Image/back.png'
+        pil_image = Image.open(background_image_path)
+        background_image = ImageTk.PhotoImage(pil_image)
 
-        # news_data가 리스트라면 그대로 사용, 딕셔너리라면 'items' 키에서 데이터를 가져옴
-        items = news_data if isinstance(news_data, list) else news_data.get('items', [])
+        # Canvas 생성 및 배경 이미지 설정
+        if not hasattr(self, 'news_canvas'):
+            self.news_canvas = tk.Canvas(self.news_frame, width=560, height=455, bg='white')
+            self.news_canvas.pack(fill='both', expand=True)
+            self.news_canvas.create_image(0, 0, image=background_image, anchor='nw')
+            self.news_canvas.image = background_image  # 이미지 참조 유지
 
-        # 데이터 표시
-        for item in items:
-            # API 호출 결과 또는 직접 스크랩한 데이터 처리
-            title = clean_html(item.get('title', ''))
-            link = item.get('link', '')
+        # 기존 뉴스 아이템 삭제
+        self.news_canvas.delete("news_item")
 
-            # 뉴스 제목과 링크 표시
-            ttk.Label(self.news_frame, text=f"{title}", font=('Helvetica', 10)).pack(anchor='w')
+        # 뉴스 데이터 표시
+        y_position = 10
+        y_position_increment = 40  # 뉴스 아이템 간 간격을 40 픽셀로 설정
+        for item in news_data:
+            title = clean_html(item['title'])
+            link = item['link']
 
-            # 링크를 올바르게 열기 위한 람다 함수 수정
-            # 람다 함수에 현재 link 값을 캡처하기 위해 기본값을 사용
-            title_label = ttk.Label(self.news_frame, text=title, font=('Helvetica', 12, 'bold'), foreground="blue",
-                                    cursor="hand2")
-            title_label.pack(anchor='w')
-            title_label.bind("<Button-1>", lambda e, l=link: webbrowser.open(l))
+            # Canvas에 뉴스 아이템 직접 추가, "news_item" 태그 사용
+            title_id = self.news_canvas.create_text(10, y_position, text=title, anchor='nw',
+                                                    font=('Helvetica', 12, 'bold'), fill="blue", tags="news_item")
+            self.news_canvas.tag_bind(title_id, "<Button-1>", lambda e, l=link: webbrowser.open(l))
+            y_position += y_position_increment  # 다음 뉴스 아이템의 위치 조정
+
+        # 스크롤 리전 업데이트
+        self.news_canvas.configure(scrollregion=self.news_canvas.bbox("all"))
 
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()  # 검색어 가져오기
