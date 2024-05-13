@@ -5,7 +5,9 @@ import json
 from bs4 import BeautifulSoup
 from html import unescape
 import requests
-
+from PIL import Image, ImageTk
+from io import BytesIO
+import queue
 client_id = "pk58dq7tnbpRqjUTnE51"
 client_secret = "deoKEIaIyh"
 # 네이버 Open API URL 정보
@@ -37,15 +39,25 @@ def get_request_url(api_url):
         print("API 요청 중 오류 발생:", e)
         return None
 
-def get_news_search_result(src_text, start=1, display=10):
-    api_url = f"{base_url}{node}?query={quote(src_text)}&start={start}&display={display}"
+def get_news_search_result(src_text, start=1, display=10, sort="date"):  # sort 파라미터 추가
+    api_url = f"{base_url}{node}?query={quote(src_text)}&start={start}&display={display}&sort={sort}"
     response_text = get_request_url(api_url)
     if response_text:
         response_json = json.loads(response_text)
-
-
-        return response_json
+        news_items = response_json.get('items', [])
+        filtered_news = remove_duplicates(news_items)  # 중복 제거 함수 호출
+        return filtered_news
     return None
+
+def remove_duplicates(news_items):
+    seen_titles = set()
+    unique_news = []
+    for item in news_items:
+        title = item['title']  # 기사의 제목
+        if title not in seen_titles:
+            seen_titles.add(title)
+            unique_news.append(item)
+    return unique_news
 
 
 def get_image_url(image_tag):
@@ -528,6 +540,40 @@ def get_Religion_headlines():
     return []
 
 
+def get_entertainment_headlines():
+    url = "https://entertain.naver.com/now"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    # Selecting news items based on the 'li' within class 'news_lst news_lst2'
+    news_items = soup.select('.news_lst.news_lst2 li')
+
+    headlines = []
+    for item in news_items:
+        # Check if necessary elements exist to avoid errors
+        title_element = item.find('a', class_='tit')
+        image_element = item.find('img')
+        summary_element = item.find('p', class_='summary')
+
+        if title_element and image_element and summary_element:
+            title = title_element.get_text(strip=True)
+            link = title_element['href']
+            image_url = image_element['src'] if image_element.has_attr('src') else None
+            summary = summary_element.get_text(strip=True)
+
+            headlines.append({
+                'title': title,
+                'link': link,
+                'image_url': image_url,
+                'summary': summary
+            })
+
+    return headlines
+
+
 def get_trending_keywords():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -551,3 +597,29 @@ def get_trending_keywords():
     else:
         print("Failed to load page")
         return [], []
+class ImageLoader:
+    def __init__(self, root, image_queue):
+        self.root = root
+        self.image_queue = image_queue
+
+    def load_image_async(self, image_url, image_label):
+        try:
+            response = requests.get(image_url)
+            img_data = BytesIO(response.content)
+            image = Image.open(img_data).resize((100, 100))
+            photo = ImageTk.PhotoImage(image)
+            self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
+        except Exception as e:
+            print(f"Error loading image: {e}")
+
+    def start_image_update_loop(self):
+        try:
+            while not self.image_queue.empty():
+                image_label, photo = self.image_queue.get_nowait()
+                image_label.configure(image=photo)
+                image_label.image = photo  # 참조 유지
+        except queue.Empty:
+            pass
+        finally:
+            # 100ms 후에 이 메소드를 다시 호출하여 큐를 확인
+            self.root.after(100, self.start_image_update_loop)
