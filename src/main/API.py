@@ -1,4 +1,4 @@
-#API.py
+#src/main/API.py
 import urllib.request
 from urllib.parse import quote
 import json
@@ -573,30 +573,36 @@ def get_entertainment_headlines():
 
     return headlines
 
-
 def get_trending_keywords():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
-    keyword_url = "https://coinpan.com/free"  # 실제 사용할 URL로 대체 필요
-    response = requests.get(keyword_url, headers=headers)
-    if response.status_code == 200:
+    keyword_url = "https://coinpan.com/free"
+    try:
+        response = requests.get(keyword_url, headers=headers)
+        response.raise_for_status()
+
         soup = BeautifulSoup(response.text, 'html.parser')
         keyword_list = soup.select('.realtimeranking_widget_content.popular ul li a')
+
+        if not keyword_list:
+            print("No keywords found on the page.")
+            return ["테스트 키워드1", "테스트 키워드2"], [10, 9]  # 테스트 데이터 반환
 
         keywords = []
         popularity = []
 
         for index, keyword in enumerate(keyword_list, start=1):
-            rank = keyword.find('span').text.strip()  # 순위
+            rank = keyword.find('span').text.strip()
             keyword_text = keyword.get_text().strip().replace(rank, '').strip()
             keywords.append(keyword_text)
-            popularity.append(11 - index)  # 순위를 점수로 변환 (1위 -> 가장 큰 값)
+            popularity.append(11 - index)
 
         return keywords, popularity
-    else:
-        print("Failed to load page")
-        return [], []
+    except requests.RequestException as e:
+        print(f"Failed to load page: {e}")
+        return ["테스트 키워드1", "테스트 키워드2"], [10, 9]
+
 class ImageLoader:
     def __init__(self, root, image_queue):
         self.root = root
@@ -623,3 +629,4 @@ class ImageLoader:
         finally:
             # 100ms 후에 이 메소드를 다시 호출하여 큐를 확인
             self.root.after(100, self.start_image_update_loop)
+print(get_trending_keywords())
