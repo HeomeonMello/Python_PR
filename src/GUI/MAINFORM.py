@@ -9,10 +9,10 @@ import webbrowser
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from wordcloud import WordCloud
+import pandas as pd
+import numpy as np
 import matplotlib.font_manager as fm
-
-
+from src.GUI.Bubble_Chart import BubbleChart
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
                           get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords,get_entertainment_headlines,ImageLoader)
@@ -286,40 +286,60 @@ class NewsFeedApp:
     def create_keyword_frame(self):
         container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
         container.place(x=5, y=580, width=560, height=310)
-        # 폰트 설정
-        font_path = 'C:/Windows/Fonts/malgun.ttf'
-        prop = fm.FontProperties(fname=font_path)
-        # 키워드 클라우드를 생성하고 표시하는 함수 호출
-        self.display_word_cloud(container, prop)
+        self.display_bubble_chart(container)
 
-    def display_word_cloud(self, container, font_properties):
-        # 키워드와 인기도 데이터 가져오기
+    def display_bubble_chart(self, container):
         keywords, popularity = get_trending_keywords()
 
         if not keywords:
-            print("No keywords to display.")  # 키워드 데이터가 없는 경우 메시지 출력
+            print("No keywords to display.")
             return
 
-        # 키워드와 인기도를 딕셔너리로 결합
-        keyword_freq = {word: pop for word, pop in zip(keywords, popularity)}
+        # 한글 폰트 설정
+        font_path = "../Font/Chartfont1_Bold.ttf"
+        font_prop = fm.FontProperties(fname=font_path)
 
-        # 워드 클라우드 생성
-        wordcloud = WordCloud(font_path=font_properties.get_file(), width=700, height=335,
-                              background_color='white').generate_from_frequencies(keyword_freq)
+        # 버블 크기 조정
+        scale_factor = 10000  # 기본 스케일 팩터
 
-        # matplotlib Figure 생성
-        fig, ax = plt.subplots(figsize=(10, 3.35), dpi=100)
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis('off')  # 축을 숨깁니다.
+        # 각 순위마다 버블 크기의 편차를 크게 조정
+        area = np.array([popularity[0] * scale_factor * 2] +
+                        [popularity[1] * scale_factor * 1.5] +
+                        [popularity[2] * scale_factor * 1.3] +
+                        [popularity[i] * scale_factor for i in range(3, 10)])
 
-        # Tkinter와 호환되는 캔버스에 Figure 삽입
+        # area 값 확인 출력
+        print("area values:", area)
+
+        data = {
+            'keywords': keywords,
+            'market_share': area,
+            'color': plt.cm.tab10(np.linspace(0, 1, len(keywords)))
+        }
+
+        bubble_chart = BubbleChart(area=data['market_share'], bubble_spacing=0.1)
+        bubble_chart.collapse()
+
+        fig, ax = plt.subplots(figsize=(5.5, 3.05), subplot_kw=dict(aspect="equal"))
+        bubble_chart.plot(fig, ax, data['keywords'], data['color'], font_prop)
+        ax.axis("off")
+        ax.relim()
+        ax.autoscale_view()
+        ax.set_title('인기 검색어 TOP 10', fontproperties=font_prop)
+
+        plt.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
+        fig.tight_layout()
+
         canvas = FigureCanvasTkAgg(fig, master=container)
         canvas_widget = canvas.get_tk_widget()
-
-        # 위치 지정을 위해 place 사용
-        canvas_widget.place(x=0, y=0, width=555, height=295)  # 원하는 x, y 좌표와 크기 지정
-
+        canvas_widget.place(x=0, y=0, width=555, height=305)
         canvas.draw()
+
+        def mouse_event(event):
+            bubble_chart.on_hover(event)
+            bubble_chart.update()
+
+        canvas.mpl_connect("motion_notify_event", mouse_event)
 
     def load_initial_news(self):
         self.search_news("일반")
