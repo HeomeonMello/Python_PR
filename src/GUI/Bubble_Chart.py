@@ -1,7 +1,7 @@
+#src/GUI/Bubble_Chart.py
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-
 class BubbleChart:
     def __init__(self, area, bubble_spacing=0):
         area = np.asarray(area)
@@ -14,7 +14,6 @@ class BubbleChart:
         self.bubbles = np.ones((len(area), 6))  # shape (6,)
         self.bubbles[:, 2] = r
         self.bubbles[:, 3] = area
-        self.bubbles[:, 4:6] = self.bubbles[:, :2]  # 원래 위치를 저장
         self.maxstep = 2 * self.bubbles[:, 2].max() + self.bubble_spacing
         self.step_dist = self.maxstep / 2
 
@@ -23,7 +22,6 @@ class BubbleChart:
         gx, gy = np.meshgrid(grid, grid)
         self.bubbles[:, 0] = gx.flatten()[:len(self.bubbles)]
         self.bubbles[:, 1] = gy.flatten()[:len(self.bubbles)]
-        self.bubbles[:, 4:6] = self.bubbles[:, :2]  # 원래 위치 저장
 
         self.com = self.center_of_mass()
         self.fig = None
@@ -31,6 +29,8 @@ class BubbleChart:
         self.hover_bubble = None
         self.mouse_x = None
         self.mouse_y = None
+
+        self.velocity = np.zeros((len(area), 2))  # 속도 벡터 추가
 
     def center_of_mass(self):
         return np.average(self.bubbles[:, :2], axis=0, weights=self.bubbles[:, 3])
@@ -120,6 +120,9 @@ class BubbleChart:
         self.fig.canvas.mpl_connect("motion_notify_event", self.on_hover)
         self.fig.canvas.mpl_connect("draw_event", self.update)
 
+        # plot 메서드에서 초기 위치를 저장
+        self.bubbles[:, 4:6] = self.bubbles[:, :2]
+
     def on_hover(self, event):
         if self.ax is None:
             return
@@ -130,19 +133,26 @@ class BubbleChart:
         self.mouse_y = event.ydata
 
     def update(self, event=None):
+        damping = 0.1  # 감쇠 계수를 낮춰서 더 큰 탄성 효과를 줌
+        attraction_strength = 0.1  # 마우스 근처 버블의 이동 강도
+        original_position_strength = 0.2  # 원래 위치로 돌아가는 힘 강도 증가
+
         if self.mouse_x is not None and self.mouse_y is not None:
             for i, bubble in enumerate(self.bubbles):
                 dist = np.hypot(bubble[0] - self.mouse_x, bubble[1] - self.mouse_y)
                 if dist < bubble[2] * 2:  # 마우스 근처에 있는 버블만 이동
                     direction = np.array([bubble[0] - self.mouse_x, bubble[1] - self.mouse_y])
                     direction = direction / np.linalg.norm(direction)  # 방향 벡터를 단위 벡터로 만듦
-                    bubble[:2] += direction * 2  # 이동 거리 조정
-        else:
-            for bubble in self.bubbles:
-                direction = np.array([bubble[4] - bubble[0], bubble[5] - bubble[1]])
-                if np.linalg.norm(direction) > 0.1:
-                    direction = direction / np.linalg.norm(direction)
-                    bubble[:2] += direction * 0.5  # 원래 위치로 돌아가는 힘 추가
+                    self.velocity[i] += direction * attraction_strength  # 마우스 방향으로 이동
+
+        # 원래 위치로 돌아가는 힘 추가
+        for i, bubble in enumerate(self.bubbles):
+            direction = bubble[4:6] - bubble[:2]  # 원래 위치로 돌아가는 방향
+            self.velocity[i] += direction * original_position_strength
+
+        # 속도 업데이트 및 감쇠 적용
+        self.bubbles[:, :2] += self.velocity
+        self.velocity *= damping
 
         for i, bubble in enumerate(self.bubbles):
             circ = self.circles[i]
