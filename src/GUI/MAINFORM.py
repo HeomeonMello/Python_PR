@@ -1,4 +1,4 @@
-#MAINFORM.py
+#src/GUI/MAINFORM.py
 import queue
 import threading
 import tkinter as tk
@@ -300,11 +300,11 @@ class NewsFeedApp:
         font_prop = fm.FontProperties(fname=font_path)
 
         # 버블 크기 조정
-        scale_factor = 10000  # 기본 스케일 팩터
+        scale_factor = 4  # 기본 스케일 팩터
 
         # 각 순위마다 버블 크기의 편차를 크게 조정
         area = np.array([popularity[0] * scale_factor * 2] +
-                        [popularity[1] * scale_factor * 1.5] +
+                        [popularity[1] * scale_factor * 1.7] +
                         [popularity[2] * scale_factor * 1.3] +
                         [popularity[i] * scale_factor for i in range(3, 10)])
 
@@ -320,12 +320,20 @@ class NewsFeedApp:
         bubble_chart = BubbleChart(area=data['market_share'], bubble_spacing=0.1)
         bubble_chart.collapse()
 
-        fig, ax = plt.subplots(figsize=(5.5, 3.05), subplot_kw=dict(aspect="equal"))
+        fig, ax = plt.subplots(figsize=(15.5, 5.90), subplot_kw=dict(aspect="equal"))
+
+        # 버블 차트 그리기
         bubble_chart.plot(fig, ax, data['keywords'], data['color'], font_prop)
+
+        # 타이틀 설정
+        ax.set_title('인기 검색어 TOP 10', fontproperties=font_prop, pad=-20)  # pad 값 추가하여 아래로 이동
+
+        # 축 숨기기
         ax.axis("off")
+
+        # 축 범위 재조정
         ax.relim()
         ax.autoscale_view()
-        ax.set_title('인기 검색어 TOP 10', fontproperties=font_prop)
 
         plt.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
         fig.tight_layout()
