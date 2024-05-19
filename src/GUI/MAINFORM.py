@@ -16,7 +16,7 @@ from src.GUI.Bubble_Chart import BubbleChart
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
                           get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords,get_entertainment_headlines,ImageLoader)
-
+from Weather import Weather
 class NewsFeedApp:
 
     def __init__(self, root, username=None, access_token=None):
@@ -113,28 +113,41 @@ class NewsFeedApp:
 
     def create_side_panel(self):
         from src.Server.Client import open_Myinfo_window
+
         self.side_panel = tk.Frame(self.root, width=self.panel_width, height=500, bg='#68a6fc')
         initial_x = self.root.winfo_screenwidth()
-        self.side_panel.place(x=initial_x, y=0)  # 초기 위치 오른쪽 바깥으로 설정하여 숨김
+        self.side_panel.place(x=initial_x, y=0)  # Initial position off the right edge to hide
 
         close_button = tk.Button(self.side_panel, text="X", bg="#68a6fc", fg="white", borderwidth=0,
                                  font=('Helvetica', 25, 'bold'),
                                  command=self.toggle_side_panel)
         close_button.pack(anchor='ne')
 
-        # open_Myinfo_window 함수를 my_info_button 생성 전에 정의합니다.
-
-
         my_info_button = tk.Button(self.side_panel, text="내 정보", bg='#68a6fc',
                                    fg='white',
                                    font=('Helvetica', 20),
                                    highlightbackground='#68a6fc', highlightthickness=0, bd=0, relief='flat',
-                                   command=open_Myinfo_window)  # 여기서 함수를 command로 지정합니다.
+                                   command=open_Myinfo_window)
         my_info_button.pack(pady=60)
+
+        weather_info_button = tk.Button(self.side_panel, text="날씨 정보", bg='#68a6fc',
+                                        fg='white',
+                                        font=('Helvetica', 20),
+                                        highlightbackground='#68a6fc', highlightthickness=0, bd=0, relief='flat',
+                                        command=self.open_Weather_window)
+        weather_info_button.pack(pady=0)
 
         # 이 공백을 안 쓰면 네모가 작아져요
         dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                 ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
         dot_label.pack(side='bottom', anchor='se')
+
+    def toggle_side_panel(self):
+        # 사이드 패널의 가시성을 토글하는 로직을 구현합니다.
+        pass
+
+    def open_Weather_window(self):
+        weather_window = tk.Toplevel(self.root)
+        Weather(weather_window) # Weather 클래스의 인스턴스를 생성하고 초기화합니다.
 
     def toggle_side_panel(self, _=None):
         # 사이드 패널이 화면 오른쪽에서 왼쪽으로 이동하게끔 시작 위치 변경
