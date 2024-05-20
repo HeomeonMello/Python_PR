@@ -39,6 +39,7 @@ def get_request_url(api_url):
         print("API 요청 중 오류 발생:", e)
         return None
 
+
 def get_news_search_result(src_text, start=1, display=10, sort="date"):  # sort 파라미터 추가
     api_url = f"{base_url}{node}?query={quote(src_text)}&start={start}&display={display}&sort={sort}"
     response_text = get_request_url(api_url)
@@ -46,8 +47,29 @@ def get_news_search_result(src_text, start=1, display=10, sort="date"):  # sort 
         response_json = json.loads(response_text)
         news_items = response_json.get('items', [])
         filtered_news = remove_duplicates(news_items)  # 중복 제거 함수 호출
-        return filtered_news
+
+        detailed_news = []
+        for item in filtered_news:
+            title = clean_html(item.get('title', 'No title found'))
+            originallink = item.get('originallink', 'No original link found')
+            link = item.get('link', 'No link found')
+            description = clean_html(item.get('description', 'No description found'))
+            pubDate = item.get('pubDate', 'No publication date found')
+
+            detailed_news.append({
+                'title': title,
+                'originallink': originallink,
+                'link': link,
+                'description': description,
+                'pubDate': pubDate,
+                # 'image_url': image_url  # 메인 사진 URL 제거
+            })
+
+        return detailed_news
     return None
+
+
+
 
 def remove_duplicates(news_items):
     seen_titles = set()
@@ -611,10 +633,13 @@ class ImageLoader:
     def load_image_async(self, image_url, image_label):
         try:
             response = requests.get(image_url)
-            img_data = BytesIO(response.content)
-            image = Image.open(img_data).resize((100, 100))
-            photo = ImageTk.PhotoImage(image)
-            self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
+            if response.status_code == 200:
+                img_data = BytesIO(response.content)
+                image = Image.open(img_data).resize((100, 100))
+                photo = ImageTk.PhotoImage(image)
+                self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
+            else:
+                print(f"Failed to load image, status code: {response.status_code}")
         except Exception as e:
             print(f"Error loading image: {e}")
 
@@ -629,4 +654,17 @@ class ImageLoader:
         finally:
             # 100ms 후에 이 메소드를 다시 호출하여 큐를 확인
             self.root.after(100, self.start_image_update_loop)
-print(get_trending_keywords())
+
+    def load_image(self, image_url):
+        try:
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                img_data = BytesIO(response.content)
+                pil_image = Image.open(img_data).resize((100, 100))
+                return ImageTk.PhotoImage(pil_image)
+            else:
+                print(f"Failed to load image, status code: {response.status_code}")
+                return None
+        except Exception as e:
+            print(f"Error loading image: {e}")
+            return None
