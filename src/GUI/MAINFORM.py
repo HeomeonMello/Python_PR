@@ -16,17 +16,15 @@ from src.main.API import (get_news_search_result, clean_html, get_politics_headl
                           get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
                           get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords,get_entertainment_headlines,ImageLoader)
 from src.GUI.Weather import Weather
+from src.GUI.Side_panel import SidePanel  # Import SidePanel class
 
 class NewsFeedApp:
-
     def __init__(self, root, username=None, access_token=None):
         self.root = root
         self.userid = username
         self.access_token = access_token
-        self.search_photo = None # 이미지를 저장할 속성 추가
+        self.search_photo = None  # 이미지를 저장할 속성 추가
         self.background_image = None
-        self.is_panel_visible = False
-        self.panel_width = 200
         self.setup_ui()
         self.image_queue = queue.Queue()
         self.load_user_info()
@@ -43,32 +41,34 @@ class NewsFeedApp:
         self.create_topic_frame()
         self.create_news_frame()
         self.create_keyword_frame()
-        self.load_initial_news()
-        self.create_side_panel()
         self.create_headline_frame()
+        self.side_panel = SidePanel(self.root, self.open_myinfo_window)  # 사이드 패널 인스턴스 생성, 콜백 전달
+        self.load_initial_news()
         self.topic_functions = {
             "정치": self.load_Politics_headlines,
             "경제": self.load_Economy_headlines,
             "사회": self.load_Society_headlines,
-            "생활/문화" : self.load_Life_headlines,
+            "생활/문화": self.load_Life_headlines,
             "세계": self.load_World_headlines,
-            "IT/과학" : self.load_IT_headlines,
-            "건강" : self.load_Health_headlines,
-            "여행/레저" : self.load_Travel_headlines,
-            "음식/맛집" : self.load_Food_headlines,
-            "패션/뷰티" : self.load_Fashion_headlines,
-            "공연/전시" : self.load_Exhibition_headlines,
-            "책" : self.load_Book_headlines,
-            "종교" : self.load_Religion_headlines,
-            "자동차" : self.load_Car_headlines,
+            "IT/과학": self.load_IT_headlines,
+            "건강": self.load_Health_headlines,
+            "여행/레저": self.load_Travel_headlines,
+            "음식/맛집": self.load_Food_headlines,
+            "패션/뷰티": self.load_Fashion_headlines,
+            "공연/전시": self.load_Exhibition_headlines,
+            "책": self.load_Book_headlines,
+            "종교": self.load_Religion_headlines,
+            "자동차": self.load_Car_headlines,
             "연예": self.load_Entertain_headlines
-
         }
+
+    def open_myinfo_window(self):
+        from src.Server.Client import open_Myinfo_window
+        open_Myinfo_window()
 
     def load_user_info(self):
         if self.userid and self.access_token:
             messagebox.showinfo("성공", "{}님 반갑습니다.".format(self.userid))
-            # 여기서 추가 로직을 구현할 수 있습니다. 예: API 호출에 토큰 사용
         else:
             print("로그인한 사용자 정보를 찾을 수 없습니다.")
 
@@ -110,67 +110,8 @@ class NewsFeedApp:
         setting_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
         setting_canvas.pack(side='right', padx=10, pady=10)  # 오른쪽에 배치
         setting_canvas.create_image(17, 17, image=setting_photo)
-        setting_canvas.bind("<Button-1>", self.toggle_side_panel)  # 오른쪽 패널을 여는 기능 바인딩
+        setting_canvas.bind("<Button-1>", lambda e: self.side_panel.toggle_side_panel())  # 사이드 패널 토글 기능 바인딩
         setting_canvas.image = setting_photo
-
-    def create_side_panel(self):
-        from src.Server.Client import open_Myinfo_window
-
-        self.side_panel = tk.Frame(self.root, width=self.panel_width, height=500, bg='#68a6fc')
-        initial_x = self.root.winfo_screenwidth()
-        self.side_panel.place(x=initial_x, y=0)  # Initial position off the right edge to hide
-
-        close_button = tk.Button(self.side_panel, text="X", bg="#68a6fc", fg="white", borderwidth=0,
-                                 font=('Helvetica', 25, 'bold'),
-                                 command=self.toggle_side_panel)
-        close_button.pack(anchor='ne')
-
-        my_info_button = tk.Button(self.side_panel, text="내 정보", bg='#68a6fc',
-                                   fg='white',
-                                   font=('Helvetica', 20),
-                                   highlightbackground='#68a6fc', highlightthickness=0, bd=0, relief='flat',
-                                   command=open_Myinfo_window)
-        my_info_button.pack(pady=60)
-
-        weather_info_button = tk.Button(self.side_panel, text="날씨 정보", bg='#68a6fc',
-                                        fg='white',
-                                        font=('Helvetica', 20),
-                                        highlightbackground='#68a6fc', highlightthickness=0, bd=0, relief='flat',
-                                        command=self.open_Weather_window)
-        weather_info_button.pack(pady=0)
-
-        # 이 공백을 안 쓰면 네모가 작아져요
-        dot_label = tk.Label(self.side_panel, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                 ", bg='#68a6fc', fg='white', font=('Helvetica', 16))
-        dot_label.pack(side='bottom', anchor='se')
-
-    def toggle_side_panel(self):
-        # 사이드 패널의 가시성을 토글하는 로직을 구현합니다.
-        pass
-
-    def open_Weather_window(self):
-        weather_window = tk.Toplevel(self.root)
-        Weather(weather_window) # Weather 클래스의 인스턴스를 생성하고 초기화합니다.
-
-    def toggle_side_panel(self, _=None):
-        # 사이드 패널이 화면 오른쪽에서 왼쪽으로 이동하게끔 시작 위치 변경
-        if not self.is_panel_visible:
-            target_x = self.root.winfo_width() - self.panel_width  # 사이드 패널을 보이게 할 위치
-        else:
-            target_x = self.root.winfo_width()  # 사이드 패널을 숨길 위치
-        self.slide_panel(target_x)
-        self.is_panel_visible = not self.is_panel_visible
-
-    def slide_panel(self, target_x):
-        current_x = self.side_panel.winfo_x()
-        step = 10  # 이동 속도 조절을 위한 단계 값
-        if current_x < target_x:
-            new_x = min(current_x + step, target_x)  # 오른쪽으로 이동
-        else:
-            new_x = max(current_x - step, target_x)  # 왼쪽으로 이동
-
-        self.side_panel.place(x=new_x, y=0)
-        if new_x != target_x:  # 목표 위치에 도달하지 않았다면 계속 이동
-            self.root.after(10, lambda: self.slide_panel(target_x))
 
     def create_topic_frame(self):
         self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "연예", "패션/뷰티", "공연/전시", "책", "종교"]
@@ -348,15 +289,10 @@ class NewsFeedApp:
         self.search_news("일반")
 
     def on_topic_click(self, event, topic):
-        # 모든 주제 라벨의 배경색을 원래대로 되돌림
         for label in self.topic_labels:
             label.config(bg='#68a6fc')
 
-        # 선택된 주제의 배경색 변경
         event.widget.config(bg='#1859b5')
-
-        # 선택된 주제의 뉴스 검색
-        # 선택된 토픽에 맞는 함수를 호출
 
         self.search_news(topic)
 
@@ -424,7 +360,6 @@ class NewsFeedApp:
         self.display_headlines(headlines)
 
     def search_news(self, query):
-        # get_news_search_result 함수를 사용하여 뉴스 데이터 가져오기
         news_data = get_news_search_result(query)
         if news_data:  # 검색 결과가 존재하고, 리스트가 비어 있지 않은 경우
             filtered_news = news_data  # 여기서 필요하다면 중복 제거 로직을 추가
@@ -436,23 +371,19 @@ class NewsFeedApp:
             messagebox.showerror('오류', '뉴스를 가져오지 못했습니다.')
 
     def display_news(self, news_data):
-        # 기존 뉴스 아이템 삭제
         for widget in self.news_frame.winfo_children():
             widget.destroy()
 
-        # Canvas와 Scrollbar 설정
         canvas = tk.Canvas(self.news_frame, width=540, height=450, bg='white', highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.news_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
 
-        # 배경 이미지 로드 및 설정
         background_image_path = '../Image/back.png'
         pil_image = Image.open(background_image_path)
         background_image = ImageTk.PhotoImage(pil_image)
 
-        # 배경 이미지 설정 (가장 뒤로 보내기)
         self.news_background = canvas.create_image(0, 0, image=background_image, anchor='nw')
-        canvas.lower(self.news_background)  # 배경 이미지를 가장 뒤로 보내기
+        canvas.lower(self.news_background)
         canvas.image = background_image  # 이미지 참조 유지
         for i in range(0, 2000, pil_image.height):  # 2000은 임의의 큰 값으로, 필요에 따라 조정 가능
             canvas.create_image(0, i, image=background_image, anchor='nw')
@@ -470,7 +401,6 @@ class NewsFeedApp:
         canvas.pack(side="left", fill="both", expand=False)
         scrollbar.pack(side="right", fill="y")
 
-        # 폰트 설정
         font_path = '../Font/Newsfont1_bold.ttf'
         custom_font = tkFont.Font(family=font_path, size=11, weight='bold')
 
@@ -483,35 +413,29 @@ class NewsFeedApp:
             description = clean_html(item['description'])
             pubDate = item['pubDate']
 
-            # 제목 추가
             title_id = canvas.create_text(10, y_position, text=title, anchor='nw',
                                           font=custom_font, fill="blue", tags="news_item")
             canvas.tag_bind(title_id, "<Button-1>", lambda e, l=link: webbrowser.open(l))
 
-            # 요약 정보 추가
             y_position += 20
             description_id = canvas.create_text(10, y_position, text=description, anchor='nw',
                                                 font=('Helvetica', 10), fill="black", tags="news_item",
                                                 width=530)
 
-            # 제공된 시간 추가
             y_position += 50  # 요약 내용의 높이를 고려하여 간격을 넓게 설정
             pubDate_id = canvas.create_text(10, y_position, text=f"제공된 시간: {pubDate}", anchor='nw',
                                             font=('Helvetica', 9), fill="gray", tags="news_item")
 
             y_position += y_position_increment  # 다음 뉴스 아이템의 위치 조정
 
-        # 스크롤 영역 업데이트
         total_height = y_position + y_position_increment - 100  # 전체 높이를 계산
         canvas.configure(scrollregion=(0, 0, 540, total_height))  # 스크롤 영역을 뉴스 아이템에 맞게 설정
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()  # 검색어 가져오기
 
         if search_query:
-            # 검색어가 있다면, 뉴스 검색 함수 호출
             self.search_news(search_query)
         else:
-            # 검색어가 없다면, 사용자에게 알림
             messagebox.showinfo('알림', '검색어를 입력해 주세요.')
 
     def about(self):
@@ -527,7 +451,6 @@ class NewsFeedApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    # 예를 들어, 로그인 성공 후에 사용자 이름과 토큰을 얻었다고 가정
     username = "사용자 이름"
     access_token = "액세스 토큰"
     app = NewsFeedApp(root, username, access_token)
