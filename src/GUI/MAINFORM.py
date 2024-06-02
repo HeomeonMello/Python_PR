@@ -1,20 +1,21 @@
 import queue
 import threading
 import tkinter as tk
-from tkinter import ttk
-from tkinter import PhotoImage
 from tkinter import ttk, messagebox, Canvas, Frame, Scrollbar, font as tkFont
 import webbrowser
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
+import os
 import numpy as np
 import matplotlib.font_manager as fm
+from src.Server.Client import Client
 from src.GUI.Bubble_Chart import BubbleChart
 from src.main.API import (get_news_search_result, clean_html, get_politics_headlines, get_Economy_headlines,
-                          get_Society_headlines, get_IT_headlines,get_Car_headlines, get_Life_headlines,get_World_headlines,get_Fashion_headlines,get_Exhibition_headlines,
-                          get_Travel_headlines,get_Health_headlines,get_Food_headlines,get_Book_headlines,get_Religion_headlines, get_trending_keywords,get_entertainment_headlines,ImageLoader)
+                          get_Society_headlines, get_IT_headlines, get_Car_headlines, get_Life_headlines, get_World_headlines, get_Fashion_headlines, get_Exhibition_headlines,
+                          get_Travel_headlines, get_Health_headlines, get_Food_headlines, get_Book_headlines, get_Religion_headlines, get_trending_keywords, get_entertainment_headlines,
+                          ImageLoader, get_Breaking_headlines)
 from src.GUI.Weather import Weather
 from src.GUI.Side_panel import SidePanel  # Import SidePanel class
 
@@ -23,13 +24,15 @@ class NewsFeedApp:
         self.root = root
         self.userid = username
         self.access_token = access_token
+        self.server_url = os.getenv('SERVER_URL', 'http://localhost:5000')
+        self.client = Client(self.server_url, self.userid, self.access_token)
         self.search_photo = None  # 이미지를 저장할 속성 추가
         self.background_image = None
         self.setup_ui()
         self.image_queue = queue.Queue()
-        self.load_user_info()
-        self.image_loader = ImageLoader(self.root, self.image_queue)
+        self.image_loader = ImageLoader(self.root, self.image_queue)  # 이미지 로더 초기화
         self.image_loader.start_image_update_loop()
+        self.load_user_info()
 
     def setup_ui(self):
         self.root.title("개인화된 뉴스 피드")
@@ -43,7 +46,6 @@ class NewsFeedApp:
         self.create_keyword_frame()
         self.create_headline_frame()
         self.side_panel = SidePanel(self.root, self.open_myinfo_window)  # 사이드 패널 인스턴스 생성, 콜백 전달
-        self.load_initial_news()
         self.topic_functions = {
             "정치": self.load_Politics_headlines,
             "경제": self.load_Economy_headlines,
@@ -59,8 +61,10 @@ class NewsFeedApp:
             "책": self.load_Book_headlines,
             "종교": self.load_Religion_headlines,
             "자동차": self.load_Car_headlines,
-            "연예": self.load_Entertain_headlines
+            "연예": self.load_Entertain_headlines,
+            "속보": self.load_Breaking_headlines
         }
+        self.load_initial_news()  # setup_ui의 맨 마지막에 호출
 
     def open_myinfo_window(self):
         from src.Server.Client import open_Myinfo_window
@@ -114,7 +118,7 @@ class NewsFeedApp:
         setting_canvas.image = setting_photo
 
     def create_topic_frame(self):
-        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "연예", "패션/뷰티", "공연/전시", "책", "종교"]
+        self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "연예", "패션/뷰티", "공연/전시", "책", "종교", "속보"]
         self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
         self.topic_frame.pack(fill='x', padx=1, pady=8)
         self.topic_labels = []  # 주제 라벨들을 저장할 리스트
@@ -285,8 +289,6 @@ class NewsFeedApp:
 
         canvas.mpl_connect("motion_notify_event", mouse_event)
 
-    def load_initial_news(self):
-        self.search_news("일반")
 
     def on_topic_click(self, event, topic):
         for label in self.topic_labels:
@@ -298,6 +300,13 @@ class NewsFeedApp:
 
         if topic in self.topic_functions:
             self.topic_functions[topic]()
+
+    def load_initial_news(self):
+        self.search_news("일반")
+
+    def load_Breaking_headlines(self):
+        headlines = get_Breaking_headlines()
+        self.display_headlines(headlines)
 
     def load_Politics_headlines(self):
         headlines = get_politics_headlines()
@@ -415,7 +424,10 @@ class NewsFeedApp:
 
             title_id = canvas.create_text(10, y_position, text=title, anchor='nw',
                                           font=custom_font, fill="blue", tags="news_item")
-            canvas.tag_bind(title_id, "<Button-1>", lambda e, l=link: webbrowser.open(l))
+            canvas.tag_bind(title_id, "<Button-1>", lambda e, t=title, d=description, l=link, p=pubDate: [
+                webbrowser.open(l),
+                self.client.save_user_click(t, d, l, p)
+            ])
 
             y_position += 20
             description_id = canvas.create_text(10, y_position, text=description, anchor='nw',
@@ -430,6 +442,7 @@ class NewsFeedApp:
 
         total_height = y_position + y_position_increment - 100  # 전체 높이를 계산
         canvas.configure(scrollregion=(0, 0, 540, total_height))  # 스크롤 영역을 뉴스 아이템에 맞게 설정
+
     def handle_search(self, event=None):
         search_query = self.search_entry.get().strip()  # 검색어 가져오기
 

@@ -1,6 +1,7 @@
 # db_connection.py
 import cx_Oracle
 import bcrypt
+from dateutil import parser
 from src.DB.DB_config import db_config
 
 def get_db_connection():
@@ -200,16 +201,173 @@ def update_user_interests(userid, new_interests):
         cursor.close()
         connection.close()
 
+def save_user_click(user_id, news_title, news_description, news_url, publish_time):
+    connection = get_db_connection()
+    if connection is None:
+        print("데이터베이스 연결 실패")
+        return False
 
-def save_user_click(user_id, news_id):
-    """사용자가 뉴스를 클릭한 정보를 저장하는 함수"""
     cursor = connection.cursor()
 
-    # 뉴스 클릭 정보 저장
-    cursor.execute("""
-        INSERT INTO User_UserNewsClicks (userID, newsID)
-        VALUES (:userID, :newsID)
-    """, userID=user_id, newsID=news_id)
+    try:
+        # user_id로 User_Users 테이블에서 실제 사용자 ID를 조회
+        cursor.execute("SELECT id FROM User_Users WHERE name = :user_id", {'user_id': user_id})
+        result = cursor.fetchone()
+        if result is None:
+            print("사용자를 찾을 수 없습니다.")
+            return False
+        actual_user_id = result[0]
 
-    connection.commit()
-    cursor.close()
+        # publish_time을 올바른 형식으로 변환
+        if publish_time:
+            publish_time = parser.parse(publish_time).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            publish_time = None
+
+        print(f"Parsed publish_time: {publish_time}")  # 디버깅을 위한 출력
+
+        # 뉴스 ID를 저장할 변수 생성
+        news_id_var = cursor.var(cx_Oracle.NUMBER)
+
+        # 기사를 저장하고 ID를 반환받기
+        cursor.execute("""
+            INSERT INTO User_NewsArticles (title, description, url, publishTime)
+            VALUES (:title, :description, :url, TO_TIMESTAMP(:publishTime, 'YYYY-MM-DD HH24:MI:SS'))
+            RETURNING id INTO :news_id
+        """, {
+            'title': news_title,
+            'description': news_description,
+            'url': news_url,
+            'publishTime': publish_time,
+            'news_id': news_id_var
+        })
+        news_id = news_id_var.getvalue()[0]
+
+        print(f"Returned news_id: {news_id}")  # 디버깅을 위한 출력
+
+        # 사용자 클릭 정보 저장
+        cursor.execute("""
+            INSERT INTO User_UserNewsClicks (userID, newsID)
+            VALUES (:userID, :newsID)
+        """, {'userID': actual_user_id, 'newsID': news_id})
+
+        connection.commit()
+        print("뉴스 클릭 정보 저장 성공")
+        return True
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"뉴스 클릭 정보 저장 실패: {e}")
+        connection.rollback()
+        return False
+
+    finally:
+        cursor.close()
+        connection.close()
+def get_user_id_by_name(user_id):
+    connection = get_db_connection()
+    if connection is None:
+        print("Database connection failed")
+        return None
+
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM User_Users WHERE name = :username", {'username': user_id})
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            print(f"User with name {user_id} not found")
+            return None
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Database query failed: {e}")
+        return None
+
+    finally:
+        cursor.close()
+        connection.close()
+
+def insert_all_news_articles(title, link, image_url, summary):
+    connection = get_db_connection()
+    if connection is None:
+        print("Database connection failed")
+        return False
+
+    cursor = connection.cursor()
+
+    try:
+        # 중복된 타이틀이 있는지 확인
+        cursor.execute("SELECT COUNT(*) FROM All_NewsArticles WHERE title = :title", {'title': title})
+        count = cursor.fetchone()[0]
+        if count > 0:
+            print(f"Duplicate title found: {title}, skipping insertion")
+            return False
+
+        cursor.execute("""
+            INSERT INTO All_NewsArticles (title, link, image_url, summary)
+            VALUES (:title, :link, :image_url, :summary)
+        """, {
+            'title': title,
+            'link': link,
+            'image_url': image_url,
+            'summary': summary
+        })
+
+        connection.commit()
+        print("News article inserted successfully")
+        return True
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Failed to insert news article: {e}")
+        connection.rollback()
+        return False
+
+    finally:
+        cursor.close()
+        connection.close()
+
+def get_user_interests_and_clicks_and_all_articles(user_id):
+    user_id = get_user_id_by_name(user_id)
+    if user_id is None:
+        return None, None, None
+
+    connection = get_db_connection()
+    if connection is None:
+        print("Database connection failed")
+        return None, None, None
+
+    cursor = connection.cursor()
+
+    try:
+        # 사용자 관심사 조회
+        cursor.execute("""
+            SELECT ui.interestName
+            FROM User_UserInterests uui
+            JOIN User_Interests ui ON uui.interestID = ui.id
+            WHERE uui.userID = :user_id
+        """, {'user_id': user_id})
+        interests = [row[0] for row in cursor.fetchall()]
+
+        # 사용자 클릭한 뉴스 기사 조회
+        cursor.execute("""
+            SELECT una.title, una.description, una.url, uunc.clickTime
+            FROM User_UserNewsClicks uunc
+            JOIN User_NewsArticles una ON uunc.newsID = una.id
+            WHERE uunc.userID = :user_id
+        """, {'user_id': user_id})
+        clicks = cursor.fetchall()
+
+        # 모든 뉴스 기사 조회
+        cursor.execute("SELECT id, title, description, url FROM All_NewsArticles")
+        all_articles = cursor.fetchall()
+
+        return interests, clicks, all_articles
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Database query failed: {e}")
+        return None, None, None
+
+    finally:
+        cursor.close()
+        connection.close()
