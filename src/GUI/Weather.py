@@ -51,7 +51,7 @@ class Weather:
 
     def get_weather_info(self, event=None):
         region = self.region_var.get()
-        api_key = "https://api.openweathermap.org/data/2.5/weather?lat=123&lon=56&appid=08c43c90ec5fc93f87098f584b7661c3"  # 여기에 OpenWeatherMap API 키를 입력하세요
+        api_key = "a49dd6bbfdf22b2237e84a5240c8d86a"  # 여기에 OpenWeatherMap API 키를 입력하세요
         base_url = "http://api.openweathermap.org/data/2.5/weather"
         params = {
             "q": region,

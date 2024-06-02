@@ -95,7 +95,9 @@ def get_image_url(image_tag):
     # 위 조건들에 모두 해당하지 않는 경우
     return "No image found"
 
+
 def fetch_headlines(url, item_selector, title_selector, link_selector, image_selector, summary_selector):
+
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
     }
