@@ -248,9 +248,6 @@ class NewsFeedApp:
                         [popularity[2] * scale_factor * 1.3] +
                         [popularity[i] * scale_factor for i in range(3, 10)])
 
-        # area 값 확인 출력
-        print("area values:", area)
-
         data = {
             'keywords': keywords,
             'market_share': area,

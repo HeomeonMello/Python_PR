@@ -4,7 +4,8 @@ import threading
 import tkinter as tk
 import sys
 import os
-import subprocess
+
+from src.main.Algorithm import recommend_articles
 
 class Client:
     def __init__(self, server_url, userid=None, access_token=None):
@@ -96,6 +97,22 @@ def login_action():
             Client.access_token = access_token
             get_user_info()
 
+            # 사용자 데이터 확인 및 알고리즘 실행
+            client = Client(f"{os.getenv('SERVER_URL', 'http://localhost:5000')}", username, access_token)
+            user_data = client.get_user_data()
+
+
+            # 알고리즘 실행
+            if user_data:
+                recommended_articles = recommend_articles(user_data, access_token, client.server_url)
+                for score, article in recommended_articles:
+                    print(f"Title: {article['title']}")
+                    print(f"Link: {article['link']}")
+                    print(f"Image URL: {article['image_url']}")
+                    print(f"Summary: {article['summary']}")
+                    print(f"Score: {score[0]}")
+                    print()
+
             def on_close():
                 root.destroy()  # 전체 애플리케이션 종료
 
@@ -156,8 +173,6 @@ def get_user_info():
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
         return None
-
-
 
 def update_user_interests(user_id, new_interests, access_token):
     server_url = f"{os.getenv('SERVER_URL', 'http://localhost:5000')}/update_interests"

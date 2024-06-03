@@ -7,6 +7,10 @@ from src.main.API import (get_politics_headlines, get_Economy_headlines,
                           get_Exhibition_headlines, get_Travel_headlines, get_Health_headlines, get_Food_headlines, get_Book_headlines,
                           get_Religion_headlines, get_entertainment_headlines,  get_Breaking_headlines)
 from flask_jwt_extended import JWTManager, create_access_token,jwt_required, get_jwt_identity
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+import tensorflow as tf
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # JWT를 위한 시크릿 키
@@ -143,28 +147,37 @@ def get_user_data():
 
     return jsonify({
         'interests': interests,
-        'clicks': [{'title': click[0], 'description': click[1], 'url': click[2], 'click_time': click[3]} for click in
-                   clicks],
-        'all_articles': [{'id': article[0], 'title': article[1], 'description': article[2], 'url': article[3]} for
-                         article in all_articles]
+        'clicks': [{'title': click[0], 'description': click[1],
+                    'url': click[2], 'click_time': click[3]} for click in clicks],
+        'all_articles': [{'id': article[0], 'title': article[1], 'link': article[2],
+                           'image_url': article[3], 'summary': article[4]} for article in all_articles]
     }), 200
 
 @app.route('/recommendations', methods=['GET'])
 @jwt_required()
 def recommendations():
-    current_user_name = get_jwt_identity()  # JWT 토큰에서 사용자 name 추출
+    current_user_name = get_jwt_identity()
     user_info = db_connection.get_user_info_by_userid(current_user_name)
 
     if not user_info:
         return jsonify({'message': 'User not found'}), 404
 
-    recommended_articles = recommend_articles(current_user_name)
+    access_token = request.headers.get("Authorization").split(" ")[1]  # Extract the JWT token
+    recommended_articles = recommend_articles(current_user_name, access_token, request.host_url)
 
     if recommended_articles:
-        return jsonify(recommended_articles), 200
+        return jsonify([
+            {
+                'title': article['title'],
+                'link': article['link'],
+                'image_url': article['image_url'],
+                'summary': article['summary'],
+                'score': score[0]
+            } for score, article in recommended_articles
+        ]), 200
     else:
         return jsonify({'message': 'No recommendations available'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
+    get_user_data('kkr')

@@ -315,7 +315,6 @@ def insert_all_news_articles(title, link, image_url, summary):
         })
 
         connection.commit()
-        print("News article inserted successfully")
         return True
 
     except cx_Oracle.DatabaseError as e:
@@ -359,7 +358,7 @@ def get_user_interests_and_clicks_and_all_articles(user_id):
         clicks = cursor.fetchall()
 
         # 모든 뉴스 기사 조회
-        cursor.execute("SELECT id, title, description, url FROM All_NewsArticles")
+        cursor.execute("SELECT id, title, link, image_url, summary FROM All_NewsArticles")
         all_articles = cursor.fetchall()
 
         return interests, clicks, all_articles
