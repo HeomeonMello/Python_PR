@@ -13,7 +13,7 @@ def get_db_connection():
             dsn=dsn,
             encoding=db_config['encoding']
         )
-        print("Database connection successful")
+
         return connection
     except cx_Oracle.DatabaseError as e:
         print(f"Database connection failed: {e}")
@@ -291,7 +291,6 @@ def get_user_id_by_name(user_id):
 def insert_all_news_articles(title, link, image_url, summary):
     connection = get_db_connection()
     if connection is None:
-        print("Database connection failed")
         return False
 
     cursor = connection.cursor()
@@ -301,7 +300,7 @@ def insert_all_news_articles(title, link, image_url, summary):
         cursor.execute("SELECT COUNT(*) FROM All_NewsArticles WHERE title = :title", {'title': title})
         count = cursor.fetchone()[0]
         if count > 0:
-            print(f"Duplicate title found: {title}, skipping insertion")
+
             return False
 
         cursor.execute("""
@@ -318,7 +317,7 @@ def insert_all_news_articles(title, link, image_url, summary):
         return True
 
     except cx_Oracle.DatabaseError as e:
-        print(f"Failed to insert news article: {e}")
+
         connection.rollback()
         return False
 
@@ -329,6 +328,7 @@ def insert_all_news_articles(title, link, image_url, summary):
 def get_user_interests_and_clicks_and_all_articles(user_id):
     user_id = get_user_id_by_name(user_id)
     if user_id is None:
+        print("Database failed")
         return None, None, None
 
     connection = get_db_connection()
@@ -337,7 +337,7 @@ def get_user_interests_and_clicks_and_all_articles(user_id):
         return None, None, None
 
     cursor = connection.cursor()
-
+    print(user_id)
     try:
         # 사용자 관심사 조회
         cursor.execute("""

@@ -4,7 +4,6 @@ import threading
 import tkinter as tk
 import sys
 import os
-
 from src.main.Algorithm import recommend_articles
 
 class Client:
@@ -101,17 +100,11 @@ def login_action():
             client = Client(f"{os.getenv('SERVER_URL', 'http://localhost:5000')}", username, access_token)
             user_data = client.get_user_data()
 
-
             # 알고리즘 실행
             if user_data:
+
                 recommended_articles = recommend_articles(user_data, access_token, client.server_url)
-                for score, article in recommended_articles:
-                    print(f"Title: {article['title']}")
-                    print(f"Link: {article['link']}")
-                    print(f"Image URL: {article['image_url']}")
-                    print(f"Summary: {article['summary']}")
-                    print(f"Score: {score[0]}")
-                    print()
+                app.display_recommended_articles(recommended_articles)  # 추천된 기사를 알고리즘 프레임에 표시
 
             def on_close():
                 root.destroy()  # 전체 애플리케이션 종료

@@ -6,9 +6,10 @@ import webbrowser
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import pandas as pd
 import os
 import numpy as np
+import requests
+from io import BytesIO
 import matplotlib.font_manager as fm
 from src.Server.Client import Client
 from src.GUI.Bubble_Chart import BubbleChart
@@ -33,6 +34,7 @@ class NewsFeedApp:
         self.image_loader = ImageLoader(self.root, self.image_queue)  # 이미지 로더 초기화
         self.image_loader.start_image_update_loop()
         self.load_user_info()
+        self.recommended_articles = None  # 추천 기사를 저장할 속성 추가
 
     def setup_ui(self):
         self.root.title("개인화된 뉴스 피드")
@@ -45,6 +47,7 @@ class NewsFeedApp:
         self.create_news_frame()
         self.create_keyword_frame()
         self.create_headline_frame()
+        self.create_algorithm_frame()  # 새로운 프레임 추가
         self.side_panel = SidePanel(self.root, self.open_myinfo_window)  # 사이드 패널 인스턴스 생성, 콜백 전달
         self.topic_functions = {
             "정치": self.load_Politics_headlines,
@@ -89,9 +92,22 @@ class NewsFeedApp:
 
         self.root.config(menu=menu_bar)
 
+    def load_image_async(self, url, label):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                image_data = response.content
+                pil_image = Image.open(BytesIO(image_data))
+                pil_image = pil_image.resize((100, 100))
+                photo_image = ImageTk.PhotoImage(pil_image)
+                label.config(image=photo_image)
+                label.image = photo_image  # 참조 유지
+        except Exception as e:
+            print(f"Error loading image: {e}")
+
     def create_search_frame(self):
         search_frame = tk.Frame(self.root, bg='#68a6fc')
-        search_frame.pack(fill='x', pady=10)
+        search_frame.pack(fill='x', pady=1)
 
         self.search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
         self.search_entry.pack(side='left', padx=(10, 0), pady=10)
@@ -102,7 +118,7 @@ class NewsFeedApp:
 
         search_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
         search_canvas.pack(side='left', padx=10, pady=10)
-        search_canvas.create_image(17, 17, image=self.search_photo)
+        search_canvas.create_image(16, 16, image=self.search_photo)
         search_canvas.bind("<Button-1>", self.handle_search)
         search_canvas.image = self.search_photo
 
@@ -120,15 +136,25 @@ class NewsFeedApp:
     def create_topic_frame(self):
         self.topics = ["정치", "경제", "사회", "자동차", "IT/과학", "세계", "건강", "여행/레저", "음식/맛집", "연예", "패션/뷰티", "공연/전시", "책", "종교", "속보"]
         self.topic_frame = tk.Frame(self.root, bg='#68a6fc')
-        self.topic_frame.pack(fill='x', padx=1, pady=8)
+        self.topic_frame.pack(fill='x', padx=1, pady=12)
         self.topic_labels = []  # 주제 라벨들을 저장할 리스트
+
+        refresh_img = Image.open('../Image/Refresh.png').resize((25,25))
+        self.search_photo = ImageTk.PhotoImage(refresh_img)
 
         for topic in self.topics:
             topic_label = tk.Label(self.topic_frame, text=topic, fg='white', bg='#68a6fc', padx=6,
-                                   font=('Helvetica', 12, 'bold'))
-            topic_label.pack(side='left', padx=4, pady=4)
+                                   font=('Helvetica', 13, 'bold'))
+            topic_label.pack(side='left', padx=6, pady=6)
             topic_label.bind("<Button-1>", lambda e, t=topic: self.on_topic_click(e, t))
             self.topic_labels.append(topic_label)
+        # 리프레쉬 버튼 추가
+        refresh_button = tk.Button(self.topic_frame, image=self.search_photo, bg='#68a6fc', borderwidth=0,
+                                   command=self.on_refresh_click)
+        refresh_button.pack(side='right', padx=4, pady=4)
+
+    def on_refresh_click(self):
+        print("Refreshed headlines and recommended articles")
 
     def create_news_frame(self):
         # 테두리를 추가하기 위해 tk.Frame 사용
@@ -154,6 +180,84 @@ class NewsFeedApp:
 
     def on_mousewheel(self, event, canvas):
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def create_algorithm_frame(self):
+        container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
+        container.place(x=1245, y=120, width=452, height=450)
+
+        # Canvas와 Scrollbar 설정
+        self.canvas_algorithm = tk.Canvas(container, width=452, height=450, bg='white', highlightthickness=0)
+        self.scrollbar_algorithm = ttk.Scrollbar(container, orient="vertical", command=self.canvas_algorithm.yview)
+
+        # Scrollbar와 Canvas를 배치
+        self.canvas_algorithm.pack(side="left", fill="both", expand=True)
+        self.scrollbar_algorithm.pack(side="right", fill="y")
+
+        # Scrollbar와 Canvas 연결
+        self.canvas_algorithm.configure(yscrollcommand=self.scrollbar_algorithm.set)
+
+        # 스크롤 가능한 Frame 설정
+        self.algorithm_frame = ttk.Frame(self.canvas_algorithm)
+        self.canvas_algorithm.create_window((0, 0), window=self.algorithm_frame, anchor="nw")
+
+        self.canvas_algorithm.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, self.canvas_algorithm))
+
+    def display_recommended_articles(self, recommended_articles):
+        # 기존 프레임 내의 모든 위젯 삭제
+        for widget in self.algorithm_frame.winfo_children():
+            widget.destroy()
+
+        canvas = tk.Canvas(self.algorithm_frame, width=452, height=450, bg='white', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.algorithm_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        loading_image_path = '../Image/loading.png'
+        loading_image = Image.open(loading_image_path).resize((100, 100))
+        photo_loading = ImageTk.PhotoImage(loading_image)
+
+        for i, (score, article) in enumerate(recommended_articles):
+            frame = ttk.Frame(scrollable_frame)
+            frame.grid(row=i, column=0, sticky="ew", padx=10, pady=5)
+
+            # 기본 로딩 이미지 설정
+            image_label = tk.Label(frame, image=photo_loading)
+            image_label.image = photo_loading  # 참조 유지
+            image_label.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
+
+            # 이미지 로드 작업을 비동기적으로 실행
+            if article['image_url']:
+                threading.Thread(target=self.load_image_async,
+                                 args=(article['image_url'], image_label)).start()
+
+            title_font = ('Helvetica', 12, 'bold')
+            title_label = tk.Label(frame, text=article['title'], fg='blue', font=title_font, cursor='hand2',
+                                   wraplength=300, justify="left")
+            title_label.grid(row=0, column=1, sticky="w", padx=5)
+            title_label.bind("<Button-1>", lambda e, l=article['link']: webbrowser.open(l))
+
+            summary_font = ('Helvetica', 10)
+            summary_label = tk.Label(frame, text=article['summary'], font=summary_font, wraplength=300, justify="left")
+            summary_label.grid(row=1, column=1, sticky="w", padx=5)
+
+            score_label = tk.Label(frame, text=f"Score: {score[0]:.2f}", font=('Helvetica', 10, 'italic'), fg='grey')
+            score_label.grid(row=2, column=1, sticky="w", padx=5)
+
+            frame.columnconfigure(1, weight=1)  # 콘텐츠에 맞춰 열 너비 조정
+
+        total_height = len(recommended_articles) * 110  # 각 기사의 높이를 고려하여 전체 높이를 계산 (임의의 값 110 사용)
+        canvas.configure(scrollregion=(0, 0, 452, total_height))  # 스크롤 영역을 추천 기사에 맞게 설정
 
     def create_headline_frame(self):
         container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
@@ -461,7 +565,7 @@ class NewsFeedApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    username = "사용자 이름"
+    username = "kkr"
     access_token = "액세스 토큰"
     app = NewsFeedApp(root, username, access_token)
     root.mainloop()

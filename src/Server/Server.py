@@ -5,7 +5,7 @@ from src.main.Algorithm import recommend_articles
 from src.main.API import (get_politics_headlines, get_Economy_headlines,
                           get_Society_headlines, get_IT_headlines, get_Car_headlines, get_Life_headlines, get_World_headlines, get_Fashion_headlines,
                           get_Exhibition_headlines, get_Travel_headlines, get_Health_headlines, get_Food_headlines, get_Book_headlines,
-                          get_Religion_headlines, get_entertainment_headlines,  get_Breaking_headlines)
+                          get_Religion_headlines, get_entertainment_headlines)
 from flask_jwt_extended import JWTManager, create_access_token,jwt_required, get_jwt_identity
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -116,7 +116,6 @@ def scrape_and_store():
         get_Book_headlines,
         get_Religion_headlines,
         get_entertainment_headlines,
-        get_Breaking_headlines
     ]
 
     for section in sections:
@@ -136,7 +135,7 @@ def get_user_data():
     """사용자 관심사, 클릭한 기사 및 모든 기사를 조회하는 함수"""
     current_user_id = get_jwt_identity()  # JWT 토큰에서 사용자 ID 추출
     user_id = db_connection.get_user_id_by_name(current_user_id)
-
+    print(current_user_id)
     if not user_id:
         return jsonify({'message': 'User not found'}), 404
 
@@ -180,4 +179,3 @@ def recommendations():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-    get_user_data('kkr')
