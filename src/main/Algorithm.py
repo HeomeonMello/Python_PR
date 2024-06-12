@@ -5,6 +5,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Embedding, Flatten, Concatenate, Dense, Dropout, Multiply, Lambda
 import os
+import asyncio
 
 def preprocess_data(user_interests, user_clicks, all_articles, max_vocab_size=35000):
     user_interests_text = " ".join(user_interests[:3])
@@ -123,7 +124,7 @@ def train_model(interests, clicks, all_articles, model_path='model.h5'):
     model.save(model_path)
     return model, tokenizer, max_len
 
-def recommend_articles(user_data, access_token, server_url, model_path='model.h5'):
+async def recommend_articles(user_data, access_token, server_url, model_path='model.h5'):
     interests = user_data['interests']
     clicks = user_data['clicks']
     all_articles = user_data['all_articles']
@@ -134,7 +135,8 @@ def recommend_articles(user_data, access_token, server_url, model_path='model.h5
     if not interests or not clicks or not all_articles:
         return []
 
-    model, tokenizer, max_len = train_model(interests, clicks, all_articles, model_path)
+    loop = asyncio.get_event_loop()
+    model, tokenizer, max_len = await loop.run_in_executor(None, train_model, interests, clicks, all_articles, model_path)
 
     user_profiles = [" ".join(interests[:3] + [click['title'] + " " + click['description'] for click in clicks])]
     user_sequences = tokenizer.texts_to_sequences(user_profiles)

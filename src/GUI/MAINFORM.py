@@ -29,8 +29,8 @@ class NewsFeedApp:
         self.client = Client(self.server_url, self.userid, self.access_token)
         self.search_photo = None  # 이미지를 저장할 속성 추가
         self.background_image = None
+        self.image_queue = queue.Queue()  # image_queue 초기화
         self.setup_ui()
-        self.image_queue = queue.Queue()
         self.image_loader = ImageLoader(self.root, self.image_queue)  # 이미지 로더 초기화
         self.image_loader.start_image_update_loop()
         self.load_user_info()
@@ -67,6 +67,8 @@ class NewsFeedApp:
             "연예": self.load_Entertain_headlines,
             "속보": self.load_Breaking_headlines
         }
+        self.image_loader = ImageLoader(self.root, self.image_queue)  # image_loader 초기화
+        self.image_loader.start_image_update_loop()
         self.load_initial_news()  # setup_ui의 맨 마지막에 호출
 
     def open_myinfo_window(self):
@@ -111,7 +113,7 @@ class NewsFeedApp:
 
         self.search_entry = tk.Entry(search_frame, font=('Helvetica', 14), width=40)
         self.search_entry.pack(side='left', padx=(10, 0), pady=10)
-        self.search_entry.bind('<Return>', self.handle_search)
+        self.search_entry.bind('<Return>', self.handle_search)  # Enter 키 이벤트 바인딩
 
         search_img = Image.open('../Image/search.png').resize((25, 25))
         self.search_photo = ImageTk.PhotoImage(search_img)
@@ -119,7 +121,7 @@ class NewsFeedApp:
         search_canvas = tk.Canvas(search_frame, width=30, height=30, bg='#68a6fc', highlightthickness=0, bd=0)
         search_canvas.pack(side='left', padx=10, pady=10)
         search_canvas.create_image(16, 16, image=self.search_photo)
-        search_canvas.bind("<Button-1>", self.handle_search)
+        search_canvas.bind("<Button-1>", self.handle_search)  # 클릭 이벤트 바인딩
         search_canvas.image = self.search_photo
 
         # 설정 버튼 이미지 로드 및 버튼화
@@ -183,10 +185,10 @@ class NewsFeedApp:
 
     def create_algorithm_frame(self):
         container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
-        container.place(x=1245, y=120, width=452, height=450)
+        container.place(x=1245, y=120, width=452, height=770)
 
         # Canvas와 Scrollbar 설정
-        self.canvas_algorithm = tk.Canvas(container, width=452, height=450, bg='white', highlightthickness=0)
+        self.canvas_algorithm = tk.Canvas(container, width=452, height=770, bg='white', highlightthickness=0)
         self.scrollbar_algorithm = ttk.Scrollbar(container, orient="vertical", command=self.canvas_algorithm.yview)
 
         # Scrollbar와 Canvas를 배치
@@ -207,7 +209,8 @@ class NewsFeedApp:
         for widget in self.algorithm_frame.winfo_children():
             widget.destroy()
 
-        canvas = tk.Canvas(self.algorithm_frame, width=452, height=450, bg='white', highlightthickness=0)
+        # Canvas와 Scrollbar 설정
+        canvas = tk.Canvas(self.algorithm_frame, width=452, height=770, bg='white', highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.algorithm_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
 
@@ -220,6 +223,8 @@ class NewsFeedApp:
 
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Canvas와 Scrollbar를 배치
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -256,8 +261,12 @@ class NewsFeedApp:
 
             frame.columnconfigure(1, weight=1)  # 콘텐츠에 맞춰 열 너비 조정
 
-        total_height = len(recommended_articles) * 110  # 각 기사의 높이를 고려하여 전체 높이를 계산 (임의의 값 110 사용)
-        canvas.configure(scrollregion=(0, 0, 452, total_height))  # 스크롤 영역을 추천 기사에 맞게 설정
+        # 스크롤 영역 설정
+        canvas.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+        # 부모 프레임의 크기를 설정
+        self.algorithm_frame.config(width=452, height=770)
 
     def create_headline_frame(self):
         container = tk.Frame(self.root, highlightbackground='red', highlightthickness=2, relief='solid')
@@ -403,6 +412,7 @@ class NewsFeedApp:
             self.topic_functions[topic]()
 
     def load_initial_news(self):
+        self.load_Politics_headlines()  # 정치를 초기 로드 주제로 설정
         self.search_news("일반")
 
     def load_Breaking_headlines(self):

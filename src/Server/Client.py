@@ -4,8 +4,7 @@ import threading
 import tkinter as tk
 import sys
 import os
-from src.main.Algorithm import recommend_articles
-
+import asyncio
 class Client:
     def __init__(self, server_url, userid=None, access_token=None):
         self.server_url = server_url
@@ -100,11 +99,16 @@ def login_action():
             client = Client(f"{os.getenv('SERVER_URL', 'http://localhost:5000')}", username, access_token)
             user_data = client.get_user_data()
 
-            # 알고리즘 실행
-            if user_data:
+            def run_algorithm():
+                if user_data:
+                    from src.main.Algorithm import recommend_articles  # TensorFlow를 사용하는 모듈 동적으로 불러오기
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    recommended_articles = loop.run_until_complete(recommend_articles(user_data, access_token, client.server_url))
+                    app.display_recommended_articles(recommended_articles)  # 추천된 기사를 알고리즘 프레임에 표시
 
-                recommended_articles = recommend_articles(user_data, access_token, client.server_url)
-                app.display_recommended_articles(recommended_articles)  # 추천된 기사를 알고리즘 프레임에 표시
+            # 알고리즘을 백그라운드 스레드에서 실행
+            threading.Thread(target=run_algorithm).start()
 
             def on_close():
                 root.destroy()  # 전체 애플리케이션 종료
@@ -178,7 +182,7 @@ def update_user_interests(user_id, new_interests, access_token):
     }
     try:
         response = requests.put(server_url, json=data, headers=headers)
-        if response.status_code == 200:
+        if response.status == 200:
             messagebox.showinfo("성공", "관심사가 성공적으로 업데이트 되었습니다.")
         else:
             messagebox.showerror("실패", "관심사 업데이트에 실패했습니다.")

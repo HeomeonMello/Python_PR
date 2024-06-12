@@ -260,6 +260,8 @@ class ImageLoader:
     def __init__(self, root, image_queue):
         self.root = root
         self.image_queue = image_queue
+        self.no_photo_path = '../Image/NO_Photo.png'  # 기본 이미지 경로
+        self.no_photo = self.load_default_image()  # 기본 이미지 미리 로드
 
     def load_image_async(self, image_url, image_label):
         try:
@@ -268,11 +270,14 @@ class ImageLoader:
                 img_data = BytesIO(response.content)
                 image = Image.open(img_data).resize((100, 100))
                 photo = ImageTk.PhotoImage(image)
-                self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
             else:
                 print(f"Failed to load image, status code: {response.status_code}")
+                photo = self.no_photo  # 기본 이미지 사용
         except Exception as e:
             print(f"Error loading image: {e}")
+            photo = self.no_photo  # 기본 이미지 사용
+
+        self.image_queue.put((image_label, photo))  # 큐에 (레이블, 이미지) 튜플 추가
 
     def start_image_update_loop(self):
         try:
@@ -294,8 +299,14 @@ class ImageLoader:
                 pil_image = Image.open(img_data).resize((100, 100))
                 return ImageTk.PhotoImage(pil_image)
             else:
-                print(f"Failed to load image, status code: {response.status_code}")
-                return None
+                return self.no_photo  # 기본 이미지 사용
         except Exception as e:
-            print(f"Error loading image: {e}")
+            return self.no_photo  # 기본 이미지 사용
+
+    def load_default_image(self):
+        try:
+            image = Image.open(self.no_photo_path).resize((100, 100))
+            return ImageTk.PhotoImage(image)
+        except Exception as e:
+            print(f"Error loading default image: {e}")
             return None

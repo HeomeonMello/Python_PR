@@ -7,9 +7,6 @@ class BubbleChart:
         area = np.asarray(area)
         r = np.sqrt(area / np.pi)
 
-        print("Bubble areas:", area)
-        print("Bubble radii:", r)
-
         self.bubble_spacing = bubble_spacing
         self.bubbles = np.ones((len(area), 6))  # shape (6,)
         self.bubbles[:, 2] = r
